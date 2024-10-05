@@ -42,7 +42,7 @@
   
 \title
   {
-    mainlanguagetitle={RouteBastion: Architecturing a VRP API Broker},
+    mainlanguagetitle={RouteBastion: Architecting a VRP API Broker},
   }
 
 \shortauthor{Vieira et al. 2024}
@@ -124,14 +124,43 @@ This paper introduces RouteBastion, a Software as a Service (SaaS) solution desi
 
 The remainder of this paper will explore the architectural design of RouteBastion, discussing its structure, core decision-making algorithms, integration strategies with third-party APIs, and the performance considerations that make it a robust solution for industrial-grade VRP optimization.
 
+\section{Theoretical framework}
+\label{sec:theoretical_framework}
+
+This section outlines the foundational concepts and technologies that underpin the design and implementation of RouteBastion. Specifically, it covers the C4 model for software architecture, the Go programming language, and the REST architectural pattern.
+
+\subsection{C4 Model for Software Architecture}
+\label{subsec:c4_model_for_software_architecture}
+The C4 model is a widely used approach for visualizing and documenting software architecture at multiple levels of abstraction. Introduced by Simon Brown, C4 stands for Context, Container, Component, and Code, which are the four levels of diagrams used to describe software systems. The model helps architects and developers break down complex systems into understandable parts by starting with a high-level overview (context) and progressively drilling down into more detailed views (containers, components, and code). This hierarchical structure enables clear communication among stakeholders, making it easier to reason about the design and behavior of the system. In RouteBastion, the C4 model is used to depict both the overall system interaction (context) and the internal architecture of the broker (container), offering a clear understanding of how external software systems, cloud providers, and internal components interact.
+
+\subsection{Go Programming Language (Golang)}
+\label{subsec:go_programming_language}
+Go, often referred to as Golang, is an open-source programming language designed by Google with a focus on simplicity, performance, and scalability. Its statically typed nature, coupled with a rich set of built-in features like concurrency via goroutines, makes it highly suitable for building distributed and scalable systems. Go’s efficient memory management and ability to handle multiple tasks concurrently make it an excellent choice for backend services that need to manage numerous simultaneous connections, such as API gateways. In RouteBastion, Go is used to implement the Broker API, providing the scalability and performance required to handle large volumes of route optimization requests from external systems while ensuring minimal latency in selecting the appropriate cloud provider for each request.
+
+\subsection{REST Architectural Pattern}
+\label{subsec:rest}
+The Representational State Transfer (REST) is a widely adopted architectural pattern for designing networked applications. It relies on stateless communication and well-defined methods (GET, POST, PUT, DELETE) to facilitate interactions between clients and servers. RESTful APIs are lightweight, making them an ideal choice for web services that need to handle a large number of requests efficiently. RouteBastion leverages the REST pattern to expose its Broker API, enabling external systems to interact with it through simple HTTP requests. By following REST principles, RouteBastion ensures a decoupled and flexible system where each request is self-contained, allowing for easier scalability, load balancing, and integration with different systems.
+
+These three foundational elements — the C4 model, Go programming language, and REST architecture — provide the basis for the design and operational efficiency of RouteBastion. Each plays a crucial role in ensuring that the system is well-architected, scalable, and efficient.
+
+\subsection{gRPC}
+\label{subsec:grpc}
+gRPC (Google Remote Procedure Call) is a high-performance, open-source RPC framework designed for efficient communication between distributed systems. It uses Protocol Buffers (Protobuf) for serializing structured data, which reduces payload sizes and improves communication speed compared to traditional REST APIs, which often rely on JSON. One of gRPC's core advantages is its ability to support bi-directional streaming, allowing both clients and servers to continuously exchange data over a single connection, making it ideal for real-time communication in highly responsive systems.
+
+In the context of RouteBastion, gRPC offers a more efficient communication layer for internal service-to-service interactions, particularly between the Broker API and cloud providers. By leveraging gRPC's compact message format and fast processing capabilities, RouteBastion can handle larger optimization workloads with lower latency, providing faster responses and better performance for route optimization queries. While REST is a practical choice for external communication, gRPC's efficiency makes it a strong candidate for optimizing internal operations, especially when dealing with high volumes of route data and cloud provider requests.
+
 \section{System Overview}
 \label{sec:system_overview}
 RouteBastion is designed as an API gateway, enabling external systems to leverage various cloud-based Vehicle Routing Problem (VRP) optimization APIs. The platform abstracts the complexity of interacting with multiple third-party VRP optimization providers, such as Google Cloud and Azure, allowing external software systems to request route optimizations without being tied to a specific provider. The core architecture of RouteBastion revolves around the RouteBastion Broker, which facilitates communication between external client systems and cloud API providers, offering dynamic API selection and optimization scheduling.
 
 \subsection{System Context}
-\label{sec:system_context}
+\label{subsec:system_context}
+In the system context diagram \ref{fig:system}, RouteBastion interacts with two main entities:
 
-In the system context diagram, RouteBastion interacts with two main entities:
+\begin{figure}
+  \includegraphics[width=\columnwidth]{figures/c4_diagrams/System.png}
+  \caption{System Diagram\label{fig:system}}
+\end{figure}
 
 \begin{itemize}
   \item External Software System: This represents any server-side application that interacts with RouteBastion to request route optimizations or query the status of ongoing optimizations. The external system relies on RouteBastion to route these requests to the most appropriate cloud provider based on dynamic factors like cost and performance.
@@ -142,9 +171,13 @@ In the system context diagram, RouteBastion interacts with two main entities:
 At the heart of this architecture is the RouteBastion Broker, which serves as the API gateway and manages the routing of optimization requests to the cloud providers.
 
 \subsection{Container Architecture}
-\label{sec:container_architecture}
+\label{subsec:container_architecture}
+The container diagram \ref{fig:container} delves deeper into the internal components of the RouteBastion Broker system, highlighting the service itself and databases that power the platform. The key components of the architecture include:
 
-The container diagram delves deeper into the internal components of the RouteBastion Broker system, highlighting the service itself and databases that power the platform. The key components of the architecture include:
+\begin{figure}
+  \includegraphics[width=\columnwidth]{figures/c4_diagrams/Container.png}
+  \caption{Container Diagram\label{fig:container}}
+\end{figure}
 
 \begin{itemize}
   \item Broker API: The Broker API is the main container, implemented using Golang, which acts as a stateless API gateway. Its responsibilities include:
@@ -165,7 +198,6 @@ The container diagram delves deeper into the internal components of the RouteBas
 
 \section{Architectural Highlights}
 \label{sec:architectural_highlights}
-
 The architecture of RouteBastion is designed for modularity and scalability, utilizing containerized services to enable horizontal scaling and efficiently handle high traffic from external systems. The stateless Broker API ensures seamless scaling by offloading state management to Redis and PostgreSQL, which store real-time data and persistent information, respectively. A key feature of the architecture is its intelligent API selection, where the broker algorithm dynamically chooses the most cost-effective or suitable cloud provider for each optimization request, optimizing for both cost and performance. The use of Redis for in-memory data storage ensures low-latency access to ongoing optimization statuses, enabling real-time performance and rapid response to status queries. Overall, this architecture provides a robust, flexible, and efficient foundation for managing complex route optimizations across multiple cloud providers.
 
 % \section{Introduction}
