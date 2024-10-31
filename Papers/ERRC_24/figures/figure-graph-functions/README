@@ -1,0 +1,8 @@
+Yes, we could import the pgf file directly in the main
+document, but that would be an unusual example for
+casual LaTeX users.
+
+To generate:
+
+python3 graph-functions.py, then lualatex graph-functions
+then pdfcrop --margins 2 graph-functions.pdf

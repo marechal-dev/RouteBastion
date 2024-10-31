@@ -1,0 +1,8 @@
+Create the image in inkscape, export to PDF + LaTeX, then run
+"lualatex page-layout.tex" and "pdfcrop --margins 2 page-layout.pdf".
+Font size is a little exaggerated because we shrink the
+image in the final document.
+
+Yes, we could import the .pdf_tex file exported from inkscape
+directly into the document, but that would be an ususual example
+for casual LaTeX users.

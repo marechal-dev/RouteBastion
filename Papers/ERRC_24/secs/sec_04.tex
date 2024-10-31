@@ -1,0 +1,103 @@
+\section{Evaluation}
+\label{sec:evaluation}
+
+
+\subsection{Methodology}
+
+% We use the Architecture Tradeoff Analysis Method (ATAM)~\cite{atam} to evaluate the effectiveness and quality of RouteBastion's architecture. ATAM is a structured evaluation technique used to assess the quality attributes of a software architecture by analyzing its trade-offs. It helps stakeholders (such as architects, developers, project managers, clients and virtually any person interested on the software development cycle) identify and prioritize architectural decisions, their effects on the system, and how well the architecture meets various quality attributes such as performance, scalability, modifiability, security, and usability.
+
+% ATAM involves several key steps to systematically evaluate a software architecture. First, the process begins by establishing the context of the architecture, where the business goals, quality attributes (like performance, security, or scalability), and architectural drivers are identified. Next, key stakeholders from different domains (such as developers, architects, and business representatives) are engaged to express their concerns and define quality attribute scenarios, which describe critical use cases or performance goals the system must meet. The architecture is then described in detail, allowing the evaluation team to understand the design decisions made. Following this, architectural scenarios are used to analyze how well the system meets these quality attributes and where potential trade-offs occur between them. The final stages involve identifying sensitivity points (areas where small changes could have a significant impact) and trade-offs (compromises between different quality attributes), as well as prioritizing risks and deciding where further investigation or refinement is needed.
+
+% The Architecture Tradeoff Analysis Method (ATAM) is a structured evaluation technique used to assess the quality attributes of a software architecture. It helps stakeholders like architects, developers, project managers, and clients identify and prioritize architectural decisions, their effects on the system, and how well the architecture meets various quality attributes such as performance, scalability, modifiability, security, and usability. The process begins by establishing the context of the architecture, involving stakeholders from different domains to express concerns and define quality attribute scenarios. The architecture is then described in detail, and potential trade-offs are identified. The final stages involve identifying sensitivity points, trade-offs, prioritizing risks, and deciding where further investigation or refinement is needed. This structured analysis ensures the architecture aligns with business goals while considering the balance between competing system qualities.
+
+We use the Architecture Tradeoff Analysis Method (ATAM)~\cite{atam}, which is a structured evaluation technique used to assess the quality attributes of a software architecture. It helps stakeholders identify and prioritize architectural decisions, their effects on the system, and how well the architecture meets various quality attributes like performance, scalability, modifiability, security, and usability. The process begins with establishing the context of the architecture, engaging stakeholders, and defining quality attribute scenarios. The final stages involve identifying sensitivity points, trade-offs, risks, and prioritizing risks for further investigation or refinement.
+
+\subsection{Architecture Analysis}
+
+\subsubsection{Business Goals and Key Quality Attributes}
+\label{subsubsec:bg_kqa}
+
+RouteBastion aims to provide a reliable option to enterprises for selecting the best Cloud Provider for solving Vehicle Routing Problem considering their needs and restrictions. Because of that, the main business goals of our solution are as follows.
+
+
+% In the ATAM (Architecture Tradeoff Analysis Method), Business Goals represent the overarching objectives of the system from a business or strategic perspective, such as profitability, market growth, or operational efficiency. These goals provide direction and context for why the system is being developed.
+
+% On the other hand, Key Quality Attributes (KQAs) refer to specific, measurable characteristics of the system's architecture that ensure it meets the business goals. These include attributes like performance, security, scalability, and maintainability, which directly influence how the system satisfies its business objectives.
+
+\begin{itemize}
+    \item \textbf{Cost-effectiveness}: Selecting the most affordable API for route optimization from multiple cloud providers.
+    % \item \textbf{Scalability}: The ability to handle multiple route optimization requests in parallel.
+    
+    % \item \textbf{Performance}: Ensuring low-latency responses for route optimizations.
+   
+    \item \textbf{SLA Confidence}: Enhance customer assurance by consistently meeting or exceeding SLA commitments, thereby reinforcing our reputation for reliability and responsiveness in service delivery.
+     \item \textbf{Maintainability}: Easy updates and expansions as new cloud providers or APIs become available.
+\end{itemize}
+
+We define the following key quality attributes to effectively measure if our systems matches the above goals.
+
+\begin{itemize}
+     \item \textbf{Latency}: Measure the overhead on the elapsed time (i.e., delay) from request to response.
+    \item \textbf{Scalability and Elasticity}: Measures if the system accommodates fluctuating demand for route optimizations.
+    % \item {Performance: To deliver rapid responses from cloud providers and minimize latency.}
+    % \item {Modifiability: To easily adapt to changes such as new APIs or business logic.}
+    % \item \textbf{Confidentiality}: Measures To ensure client data, including API tokens and route information, are handled securely.
+    \item \textbf{Availability}: Measures whether a system is operational and accessible when required.
+     \item \textbf{Reliability}: Measures whether a system consistently performs correctly without failure over time
+    
+\end{itemize}
+
+\subsubsection{Architectural Scenarios}
+\label{subsubsec:architectural_scenarios}
+
+Some potential scenarios that stress different quality attributes include:
+\begin{itemize}
+    \item \textbf{Scenario 1 - API selection based on cost-effectiveness}: The broker must choose the cheapest available API without degrading performance.
+
+    \item \textbf{Scenario 2 - Scalability under high load}:  The RouteBastion Broker receives a large number of route optimization requests concurrently.
+    
+    \item \textbf{Scenario 3 - Cloud provider failure}: One of the cloud providers is unavailable, and the system must switch to another provider without significant delays.
+    \item \textbf{Scenario 4 - Adding a new API provider}: Integrating a new cloud provider into RouteBastion without significant downtime or code changes.
+\end{itemize}
+
+\subsubsection{Key Architectural Components and Trade-offs}
+
+Based on section \ref{sec:routebastion} diagrams, we present how our architecture aligns with the quality attributes proposed in section \ref{subsubsec:bg_kqa}, by outlining how each part of it fulfills a key quality attribute.
+
+\paragraph{Broker API} 
+% The Broker API is stateless, horizontally scalable, and able to handle multiple requests in parallel. By using Go \cite{gopl}, a language known for its performance and efficient concurrency model (goroutines), this design supports the key quality attributes (KQA) of scalability and elasticity, and availability, by making the architecture easy to scale by adding more instances of the Broker API container. Since Go provides low-latency processing, ideal for minimizing response times in route optimization, it also supports the attribute of latency. The trade-off is that, even though Go provides speed and concurrency, Go’s concurrency model must be carefully managed to avoid potential race conditions under high loads.
+
+The Broker API, using Go \cite{gopl} for its performance and concurrency model, is stateless, horizontally scalable, and capable of handling multiple parallel requests. This design supports key quality attributes (KQA's) of scalability, elasticity, and availability, but requires careful management to avoid race conditions under high loads.
+
+\paragraph{Databases}
+% \red{A relational database (PostgreSQL) for persistent storage and a key-value database (Redis) for caching and handling in-memory operations for running optimizations:}
+
+% \red{Performance and Scalability: Redis allows fast lookups and temporary storage of running optimization processes, reducing the load on the PostgreSQL database.}
+% \red{Consistency: PostgreSQL offers strong consistency guarantees, which is important for ensuring API tokens and other business-critical data are stored reliably.}
+% \red{Trade-off: The separation of data responsibilities between PostgreSQL and Redis introduces complexity, as developers must manage consistency between temporary states in Redis and persistent states in PostgreSQL. Scaling the databases could also become a bottleneck if not carefully managed.}
+
+% The architecture of RouteBastion utilizes a relational database (PostgreSQL) for persistent storage and a key-value database (Redis) for caching and in-memory operations related to running optimizations. This combination supports the KQA's of latency, scalability and availability, as Redis enables fast lookups and temporary storage for ongoing processes, effectively reducing the load on PostgreSQL. Meanwhile, PostgreSQL supports reliability, offering strong guarantees for reliable storage of critical data, such as API tokens and other business-sensitive information. However, this separation of responsibilities introduces a trade-off in terms of complexity, as developers must carefully manage the consistency between the temporary states held in Redis and the persistent data stored in PostgreSQL. Additionally, scaling both databases to handle increased workloads could become a bottleneck if not addressed properly.
+
+RouteBastion's architecture uses PostgreSQL for persistent storage and Redis for caching. This combination supports KQA's latency, scalability, and availability. While Redis reduces load on PostgreSQL, this separation introduces complexity and requires careful management of consistency and scaling for increased workloads.
+
+\paragraph{gRPC and REST}
+Using gRPC \cite{grpc} for service-to-service communication between the Broker API, cloud providers and client services supports the KQA of latency. The gRPC's compact binary format (Protocol Buffers) is highly efficient, minimizing overhead compared to REST (which typically uses JSON), providing a greater throughput/sec based on the study of Fakri and Fatih (2024)~\cite{apiGateways}. The trade-offs include the gRPC complexity added to the system and that REST may not be as performant as gRPC during high workloads because of the serialization/deserialization of the JSON payload.
+
+\paragraph{Cloud Provider Integration}
+% The architecture is built around the idea of interacting with multiple cloud providers, each providing APIs for route optimization. This idea provides availability and reliability, since the usage of multiple providers provide multiple points of failure for the application, avoiding a full-system shutdown if a single API is unavailable. However, the need to continuously evaluate and switch between different providers introduces potential latency and complexity in decision-making logic. Furthermore, each provider’s API may have different behaviors, requiring extra handling to ensure consistent results across providers.
+
+The architecture uses multiple cloud providers for route optimization, ensuring availability and reliability. However, this approach introduces latency and complexity in decision-making and may require extra handling to ensure consistent results across providers.
+
+\subsection{Discussion}\label{sec:architectural_highlights}
+
+% The goal of optimizing for the cheapest API may sometimes come at the expense of performance. While the system selects the least costly option, switching between APIs could add delays, and lower-cost APIs may have slower response times. The system is horizontally scalable (due to the stateless nature of the Broker API and the use of Redis for caching), ensuring consistency between temporary and persistent states increases the system's complexity. Proper coordination is necessary to avoid issues with data consistency and race conditions. The architecture is flexible enough to add new cloud providers and APIs.
+
+Optimizing for the cheapest API can sometimes compromise performance, as switching between options can cause delays and slower response times. The system is horizontally scalable, but maintaining consistency between temporary and persistent states increases complexity. Proper coordination is necessary to avoid data consistency issues and race conditions. The architecture is flexible enough to accommodate new cloud providers and APIs.
+
+\subsubsection{Sensitivity Points and Risks}
+
+\begin{itemize}
+    \item \textbf{Database Bottlenecks}: While Redis helps offload some traffic from PostgreSQL, both databases must be carefully scaled to handle concurrent access under heavy loads.
+    \item \textbf{API Decision Logic}: The decision-making logic in the Broker API for selecting the cheapest cloud provider is a critical point of sensitivity. Poor optimization in this algorithm could lead to performance degradation and bias towards a single Cloud Provider. 
+    \item \textbf{gRPC Complexity}: While gRPC enhances internal communication, its binary format and the requirement for precise interface definitions (Protobufs) may add development and debugging complexity, particularly for developers more familiar with REST. 
+\end{itemize}

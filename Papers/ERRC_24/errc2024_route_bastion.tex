@@ -1,0 +1,146 @@
+\documentclass[english,notblind]{sbc20}
+
+% 
+
+% Basics
+\usepackage{verbatim}  % support for unformatted text, almost mandatory
+\usepackage{graphicx}  % support for figures etc., almost mandatory
+\usepackage{array}     % extra table features, almost mandatory
+%\usepackage{pbalance}  % equal heights in last page columns (demands additional LaTeX passes)
+%\usepackage{mathtools} % extra visual tweaks/features for math, read the docs
+
+% Table improvements
+\usepackage{booktabs}  % better table aesthetics, recommended, read the docs
+\usepackage{multirow}  % table cells that span over multiple rows
+\usepackage{makecell}  % better table headings / cells with linebreaks inside
+\usepackage{dcolumn}   % align numeric columns on the decimal separator (siunitx also offers this)
+%\usepackage{longtable} % multi-page tables
+%\usepackage{threeparttable} % tables with "footnotes"
+%\usepackage{colortbl}  % colored table cells
+%\usepackage{csvsimple} % load a csv file and format as table
+
+% Extra features for floats
+%\usepackage{rotating}   % \sidewaystable, \sidewaysfigure, and other rotation commands
+%\usepackage[above,below]{placeins} % manually control float placement, read the docs
+%\usepackage{subcaption} % subfigures (side by side) with subcaptions (pkg subfigure is deprecated)
+%\usepackage{adjustbox}  % resize, clip etc. for any material, not only floats
+
+% Source code syntax highlighting
+%\usepackage{listings} % good and simple
+%\usepackage{minted}   % excellent, but depends on pygments (python, free software)
+
+%\usepackage{siunitx} % Numbers: units, scientific notation, better presentation for large numbers
+
+%\usepackage{pdfcomment} % useful in the writing/reviewing phase
+
+\usepackage{xspace}
+
+\newcommand{\red}[1]{\textcolor{red}{#1}}
+\newcommand{\toolname}{RouteBastion\xspace} 
+
+\addbibresource{bibliografia.bib}
+
+\metadata
+  {
+    pubname={Escola Regional de Redes de Computadores},
+    pubacron={ERRC},
+    idjems={XXX},
+    copyrightyear=2024,
+    category={Full Paper},
+    bibstyle=sbc20,
+  }
+  
+\title
+  {
+    mainlanguagetitle={RouteBastion: Architecting a Broker for VRP APIs},
+  }
+
+\shortauthor{Vieira et al. 2024}
+\shorttitle{RouteBastion: Architecting a Broker for VRP APIs}
+
+\author
+  {
+    email=pietrovieira.aluno@unipampa.edu.br,
+    orcid=0009-0004-0602-6567,
+    institutionID=UNIPAMPA,
+    country=Brasil,
+    firstName=Pietro,
+    lastName=Vieira
+  }
+  
+  \author
+  {
+    email=dalmazo@furg.br,
+    orcid=0000-0002-6996-7602,
+    institutionID=FURG,
+    country=Brasil,
+    firstName=Bruno,
+    lastName=Dalmazo 
+  }
+
+  \author
+  {
+    email=diegokreutz@unipampa.edu.br,
+    orcid=0000-0003-0830-0238,
+    institutionID={UNIPAMPA},
+    country=BR,
+    firstName=Diego,
+    lastName=Kreutz
+  }
+
+\author
+  {
+    email=mansilha@unipampa.edu.br,
+    orcid=0000-0002-2083-653X,
+    institutionID=UNIPAMPA,
+    country=Brasil,
+    firstName=Rodrigo,
+    lastName={Brandão Mansilha} 
+  }
+  
+\institution{UNIPAMPA}{Universidade Federal do Pampa}
+\institution{FURG}{Universidade Federal do Rio Grande}
+
+
+\extraAffiliationsLast{Pietro Vieira is a Student at the Graduate Program in Software Engineering (PPGES) at UNIPAMPA. Bruno Dalmazo is an Assistant Professor at FURG. Rodrigo Mansilha and Diego Kreutz are Professors at PPGES/UNIPAMPA.}
+
+% \abstract
+%   {
+%         The Vehicle Routing Problem (VRP) presents significant challenges to both academia and industry. Optimizing vehicle routes while balancing multiple real-life constraints, such as time windows, vehicle capacity, and fuel consumption, demands not only great computational power but also advanced algorithmic problem-solving techniques. In response, major tech companies have developed cloud-based APIs to tackle this issue, offering powerful solutions that vary in terms of cost, capabilities, and performance. With multiple APIs available, selecting the right one for a given context—whether optimizing for cost, input size, political, commercial, or other constraints—becomes a challenging task. The decision often requires balancing trade-offs, understanding long-term impacts, and considering the flexibility needed to adapt to future changes or unforeseen constraints. In this paper, we present the architecture of RouteBastion, a Software as a Service (SaaS) platform designed to unify and simplify the use of VRP-related APIs. RouteBastion leverages a modular, scalable architecture, enabling users to compare, select, and easily switch between APIs as their needs evolve. By providing seamless integration, dynamic API selection, and support for real-time decision-making, RouteBastion serves as an intelligent middleware that enhances both the flexibility and accessibility of vehicle route optimization. This paper will delve into the system architecture and the performance considerations that ensure RouteBastion can adapt to evolving industrial requirements.
+%   }
+
+\abstract
+    {
+        The Vehicle Routing Problem (VRP) is a complex issue that requires advanced algorithmic problem-solving techniques and computational power. Major tech companies have developed cloud-based APIs to address this issue, offering solutions varying in cost, capabilities, and performance. However, selecting the right one for a given context is a challenging task, requiring balancing trade-offs, understanding long-term impacts, and adapting to future changes. RouteBastion, a Software as a Service (SaaS) platform, aims to unify and simplify the use of VRP-related APIs. Its modular, scalable architecture allows users to compare, select, and switch between APIs as their needs evolve. RouteBastion provides seamless integration, dynamic API selection, and decision-making, making it an intelligent middleware that enhances the flexibility and accessibility of vehicle route optimization. The paper will explore the system architecture and performance considerations to ensure RouteBastion can adapt to evolving industrial requirements.
+    }
+
+\keywords{Vehicle Routing Problem \sep VRP \sep Software Architecture \sep Software as a Service \sep Distributed Systems}
+
+\palavraschave{Problema de Roteamento de Veículos \sep PRV \sep Arquitetura de Software \sep Software como Serviço \sep Sistemas Distribuídos}
+
+
+%\contributeinfo{}
+
+%\acknowledgements{}
+
+\funding{This study was financed in part by: (i) FAPERGS (23/2551-0000773-8) and (ii) UE iTec/FURG (iTec-62)}
+
+%\datainfo{}
+
+%\furtherinfo{}
+
+\SBCprintbibliography
+
+\begin{document}
+
+\maketitle
+
+
+\input{secs/sec_01}
+\input{secs/sec_02}
+\input{secs/sec_03}
+\input{secs/sec_04}
+\input{secs/sec_05}
+
+
+\end{document}

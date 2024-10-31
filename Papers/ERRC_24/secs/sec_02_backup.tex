@@ -1,0 +1,35 @@
+
+
+\section{Theoretical framework}
+\label{sec:theoretical_framework}
+
+This section outlines the foundational concepts and technologies that underpin the design and implementation of RouteBastion. Specifically, it covers the Architecture Tradeoff Analysis Method, the C4 model for software architecture, the Go programming language, the REST architectural pattern and the gRPC open-source RPC framework.
+
+\subsection{Architecture Tradeoff Analysis Method}
+\label{subsec:atam}
+
+The Architecture Tradeoff Analysis Method (ATAM) \cite{atam} is a structured evaluation technique used to assess the quality attributes of a software architecture by analyzing its trade-offs. ATAM helps stakeholders (such as architects, developers, project managers, clients and any people interested on the software development cycle) identify and prioritize architectural decisions, their effects on the system, and how well the architecture meets various quality attributes such as performance, scalability, modifiability, security, and usability.
+
+\subsection{C4 Model for Software Architecture}
+\label{subsec:c4_model_for_software_architecture}
+The C4 model \cite{c4model} is a widely used approach for visualizing and documenting software architecture at multiple levels of abstraction. Introduced by Simon Brown, C4 stands for Context, Container, Component, and Code, which are the four levels of diagrams used to describe software systems. The model helps architects and developers break down complex systems into understandable parts by starting with a high-level overview (context) and progressively drilling down into more detailed views (containers, components, and code). This hierarchical structure enables clear communication among stakeholders, making it easier to reason about the design and behavior of the system. In RouteBastion, the C4 model is used to depict both the overall system interaction (context) and the internal architecture of the broker (container), offering a clear understanding of how external software systems, cloud providers, and internal components interact.
+
+\subsection{Go Programming Language (Golang)}
+\label{subsec:go_programming_language}
+Go \cite{gopl}, often referred to as Golang, is an open-source programming language designed by Google with a focus on simplicity, performance, and scalability. Its statically typed nature, coupled with a rich set of built-in features like concurrency via goroutines, makes it highly suitable for building distributed and scalable systems. Go’s efficient memory management and ability to handle multiple tasks concurrently make it an excellent choice for backend services that need to manage numerous simultaneous connections, such as API gateways. In RouteBastion, Go will be used to implement the Broker API, providing the scalability and performance required to handle large volumes of route optimization requests from external systems while ensuring minimal latency in selecting the appropriate cloud provider for each request.
+
+\subsection{REST Architectural Pattern}
+\label{subsec:rest}
+The Representational State Transfer (REST) is a widely adopted architectural pattern for designing networked applications. It relies on stateless communication and well-defined methods (GET, POST, PUT, DELETE) to facilitate interactions between clients and servers. RESTful APIs are lightweight, making them an ideal choice for web services that need to handle a large number of requests efficiently. RouteBastion will leverage the REST pattern to expose its Broker API, enabling external systems to interact with it through simple HTTP requests. By following REST principles, RouteBastion will ensure a decoupled and flexible system where each request is self-contained, allowing for easier scalability, load balancing, and integration with different systems.
+
+\subsection{gRPC}
+\label{subsec:grpc}
+gRPC (Google Remote Procedure Call) \cite{grpc} is a high-performance, open-source RPC framework designed for efficient communication between distributed systems. It uses Protocol Buffers (Protobuf) for serializing structured data, which reduces payload sizes and improves communication speed compared to traditional REST APIs, which often rely on JSON. One of gRPC's core advantages is its ability to support bi-directional streaming, allowing both clients and servers to continuously exchange data over a single connection, making it ideal for real-time communication in highly responsive systems.
+
+In the context of RouteBastion, gRPC offers a more efficient communication layer for internal service-to-service interactions, particularly between the Broker API and cloud providers. By leveraging gRPC's compact message format and fast processing capabilities, RouteBastion can handle larger optimization workloads with lower latency, providing faster responses and better performance for route optimization queries. While REST is a practical choice for external communication, gRPC's efficiency makes it a strong candidate for optimizing internal operations, especially when dealing with high volumes of route data and cloud provider requests. It's important to note that RouteBastion will expose not only a REST API but will also expose a gRPC protocol to client systems, allowing them to take advantage of the great capabilities of gRPC too.
+
+These four foundational elements — the C4 model, Go programming language, REST architecture and gRPC — provide the basis for the design and operational efficiency of RouteBastion. Each plays a crucial role in ensuring that the system is well-architected, scalable, and efficient.
+
+\section{System Overview}
+\label{sec:system_overview}
+RouteBastion is designed as an API gateway, enabling external systems to leverage various cloud-based Vehicle Routing Problem (VRP) optimization APIs. The platform abstracts the complexity of interacting with multiple third-party VRP optimization providers, such as Google Cloud and Azure, allowing external software systems to request route optimizations without being tied to a specific provider. The core architecture of RouteBastion revolves around the RouteBastion Broker, which facilitates communication between external client systems and cloud API providers, offering dynamic API selection and optimization scheduling.

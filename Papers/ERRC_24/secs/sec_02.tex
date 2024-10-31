@@ -1,0 +1,91 @@
+\section{Problem Analysis}\label{sec:problem_analysis}
+
+% As observed in Section~\ref{sec:intro}, the VRP is a well-known problem to both academia and industry, because of the appliability of VRP solutions in the real-world. With the advent of Cloud Computing and advancements on various fields of Computer Science, as well on the computing power available, multiple companies solved the VRP in different ways and exposed their solution with and API as a product. With many APIs available such as the Google Optimization API and the Azure Maps Route Service, selecting an option can be overwhelming, not only because of the different pricing methodologies applied by companies, but also because the numerous features available on each API.
+
+% The RouteBastion Broker aim not only to provide a robust middleware that make the interaction with the said VRP APIs easy, but also intelligent decision-making by leveraging different metrics in order to choose the right API for the needs of a customer.
+
+% As discussed in Section~\ref{sec:intro}, the VRP (Vehicle Routing Problem) is a well-known challenge in both academia and industry due to its complex real-world applications. Numerous solutions have emerged with the advent of Cloud Computing and advancements in computing power, allowing companies like Google and Microsoft to offer VRP optimization services through APIs, such as Google Optimization API and Azure Maps Route Service. However, a significant problem that remains unresolved is the difficulty in selecting the most suitable API for a given use case, considering not only the varying pricing models but also the diverse range of features and performance metrics each API offers. Current solutions tend to focus on providing a single API, leaving customers to manually compare and test multiple APIs, a process that is often inefficient and prone to suboptimal decisions.
+
+% The RouteBastion Broker addresses this issue by offering a unified middleware that simplifies and automates the interaction with various VRP APIs. Its key differentiator lies in its intelligent decision-making mechanism that leverages multiple metrics—such as cost, performance, input size limits, and specific customer requirements—to dynamically select the optimal API for each request. This approach not only removes the burden of manual comparison but also ensures that the API chosen aligns with the customer's specific needs in real-time. By focusing on adaptability and intelligent API selection, RouteBastion fills the gap left by existing solutions that do not adequately support dynamic, data-driven API selection in complex VRP scenarios.
+
+% As stated in Section~\ref{sec:intro}, the VRP is a complex challenge in academia and industry due to its complex real-world applications. With the advent of Cloud Computing and computing power, companies like Google and Microsoft offer VRP optimization services through APIs like Google Optimization API and Azure Maps Route Service. However, selecting the most suitable API for a given use case remains a significant problem. Current solutions focus on providing a single API, leaving customers to manually compare and test multiple APIs, which is often inefficient and prone to suboptimal decisions. The RouteBastion Broker addresses this issue by offering a unified middleware that simplifies and automates interaction with various VRP APIs. Its key differentiator lies in its intelligent decision-making mechanism, which will leverage multiple metrics to dynamically select the optimal API for each request. This approach removes the burden of manual comparison and ensures the chosen API aligns with the customer's specific needs.
+
+As stated in Section~\ref{sec:intro}, the VRP is a complex challenge in academia and industry due to its complex real-world applications. Companies like Google and Microsoft offer VRP optimization services through APIs like Google Optimization API and Azure Maps Route Service. However, selecting the most suitable API for a use case remains a significant problem. The RouteBastion Broker addresses this issue by offering a unified middleware that simplifies and automates interaction with various VRP APIs. Its key differentiator lies in its intelligent decision-making mechanism, which leverages multiple metrics to select the optimal API for each request dynamically. It removes the burden of manual comparison and aligns the chosen API with the customer's specific needs.
+
+\subsection{Requirements}
+
+We present the functional and non functional requirements for RouteBastion on tables \ref{tab:req_func} and \ref{tab:req_nofunc}, respectively.
+
+\begin{table}
+    \centering
+    \caption{Functional Requirements.}
+    \label{tab:req_func}
+    \begin{tabular}{p{.8cm}|p{6.5cm}}
+        \hline
+        ID & Requirement \\
+        \hline
+        
+        {\small FR01} & {\small As an External Software System (ESS), I want to register and manipulate (query, update, delete) all my limitations, like the available budget and security/performance/availability concerns, in order to tailor my needs for selecting a Cloud Provider.} \\
+        {\small FR02} & {\small As an ESS, I want to request an optimization by sending waypoints and vehicles involved on the route, to start a new optimization.} \\
+        {\small FR03} & {\small As an ESS, I want to cancel an optimization by sending an optimization identifier, in order to cancel a running optimization.} \\
+        {\small FR04} & {\small As an ESS, I want to query my running optimizations and their progresses, in order to get to know the progress of my optimizations} \\
+        {\small FR05} & {\small As an ESS, I want to query my previous completed optimizations, in order to access historical data.} \\
+        {\small FR06} & {\small As an ESS, I want to be able to opt-out the Selection Algorithm by choosing a pre-defined VRP API based on the available ones, in order to use an API that suits my needs.} \\
+        {\small FR07} & {\small As the Broker API, I should periodically request the status of an optimization and memoize the result in order to reduce the system overall latency.} \\
+        {\small FR08} & {\small As the Broker API, I should balance the workload between cloud providers, in order to not be blocked from making new requests to a specific cloud provider.} \\
+        {\small FR09} & {\small As the Broker API, I should expose a list of available Cloud Providers, in order to be transparent with ESS's.} \\
+        {\small FR10} & {\small As the Broker API, I should periodically run the Selection Algorithm and memorize the results, in order to know the best available VRP APIs providers to reduce the latency of requests.} \\
+        {\small FR11} & {\small As the Broker API, I should queue pending optimizations requests if the selected cloud provider is busy (i.e. the maximum of requests have been achieved).} \\
+        \hline
+    \end{tabular}
+    
+\end{table}
+
+\begin{table}
+    \centering
+    \caption{Non Functional Requirements.}
+    \label{tab:req_nofunc}
+    \begin{tabular}{p{.8cm}|p{6.5cm}}
+        \hline
+        ID & Requirement \\
+        \hline
+    
+        {\small NFR01} & {\small The API Keys should not be persisted on plain text.} \\
+        {\small NFR02} & {\small An ESS should only interact with the RouteBastion by using a valid API Key.} \\
+        {\small NFR03} & {\small The system should have low-latency, in order to be able to handle a high number of requests.} \\
+        {\small NFR04} & {\small The system should be horizontally scalable, in order to adapt to a high number of requests.} \\
+        {\small NFR05} & {\small The system should be fault-tolerant by having multiple replicas, in order to be reliable to the ESS's.} \\
+        {\small NFR06} & {\small The system should be highly available, with minimum downtime required for operations like deployment and error recovery.} \\
+        \hline
+    \end{tabular}
+    
+\end{table}
+
+
+\subsection{Related Work}
+
+% In the context of cloud service/provider selection, previous research has introduced brokerage-based architectures that aim to address the complexity of choosing optimal cloud services for users. Sundareswaran et al. (2012) \cite{broker} proposed a cloud brokerage system that acts as an intermediary between users and cloud service providers, helping users select services tailored to their needs based on several factors like cost, security, and performance. Their approach involves an indexing technique to efficiently manage large numbers of cloud service providers and a service selection algorithm that ranks providers according to user requirements. This work highlights the growing importance of cloud brokers in optimizing service selection and managing resource aggregation when a single provider cannot fulfill all user needs.
+
+Some works present solutions to VRP API usage \cite{gmaps2024, ant2024, Cavecchia2024}, however, in the context of cloud service/provider selection, previous research has introduced brokerage-based architectures that aim to address the complexity of choosing optimal cloud services for users. Sundareswaran et al. (2012) \cite{broker} proposed a cloud brokerage system, helping users select services tailored to their needs based on several factors like cost, security, and performance. Their approach involves an indexing technique to efficiently manage large numbers of cloud service providers and a service selection algorithm that ranks providers according to user requirements.
+
+% Achar and Thilgam (2014) \cite{broker2} proposed a broker-based architecture to address the challenge of choosing a suitable cloud provider from multiple available options. Their system introduces a cloud broker that evaluates and ranks providers based on factors like cost, availability, and security. This architecture incorporates a Service Measurement Index (SMI), which helps differentiate cloud providers by their performance in various categories. Additionally, the paper utilizes the TOPSIS method, a multi-criteria decision-making tool, to prioritize cloud providers based on the requester's requirements. The broker then facilitates optimal resource allocation across cloud providers by matching service demands with the best available provider, based on pre-defined criteria.
+
+% Achar and Thilgam (2014) \cite{broker2} proposed a broker-based architecture to address the challenge of choosing a suitable cloud provider from multiple available options. Their system introduces a cloud broker that evaluates and ranks providers based on factors like cost, availability, and security. This architecture incorporates a Service Measurement Index (SMI), which helps differentiate cloud providers by their performance in various categories. The paper also utilizes the TOPSIS method, a multi-criteria decision-making tool, to prioritize cloud providers based on the requester's requirements. The broker then facilitates optimal resource allocation across cloud providers by matching service demands with the best available provider, based on pre-defined criteria.
+
+Achar and Thilgam (2014) \cite{broker2} proposed a broker-based architecture to address the challenge of choosing a suitable cloud provider from multiple available options. Their system introduces a cloud broker that evaluates and ranks providers based on factors like cost, availability, and security. This architecture incorporates a Service Measurement Index (SMI), which helps differentiate cloud providers by their performance in various categories.
+
+Rădulescu et al. (2016) \cite{selection} proposed a decision-making framework that addresses the complexity of weighting and ranking criteria for selecting cloud providers. Their framework combines the Decision-Making Trial and Evolution Laboratory (DEMATEL) method and Analytical Network Process (ANP) method, forming a hybrid approach (DANP) to better handle the interdependencies between various criteria, such as cost, performance and security.
+
+Similarly, Baranwal and Vidyarthi (2014) \cite{selection2} presents a framework for selecting the best service providers using a Ranked Voting Method. This framework addresses the challenge of choosing a cloud service provider by ranking providers based on Quality of Service (QoS) metrics, such as cost, availability and security.
+
+Likewise previously cited papers, RouteBastion seeks to address the challenge of choosing the best Cloud Service Provider by acting as a unified service broker, dynamically selecting the most appropriate provider based on factors such as cost-effectiveness and performance, thus aligning with existing approaches for cloud services provider selection.
+
+\subsection{Related Systems}
+
+While not identical to RouteBastion, various commercial systems aim to provide a solution to the VRP problem, but also provide full functionality of a logistics enterprise software, being those:
+
+\begin{itemize}
+    \item {Onfleet: Onfleet \footnote{\url{https://onfleet.com/}} is a logistics management platform that provides route optimization, driver tracking, and delivery analytics. It integrates with multiple external systems and focuses on optimizing delivery routes for businesses. Although it doesn’t aggregate multiple VRP APIs like RouteBastion, it addresses the same need for efficient routing and logistics management but through a standalone platform.}
+
+    \item {OptimoRoute: OptimoRoute \footnote{\url{https://optimoroute.com/}} is another SaaS solution that focuses on route optimization, handling constraints like delivery windows, vehicle capacities, and driver schedules. It is tailored for small to medium-sized logistics businesses and provides an all-in-one routing solution. However, unlike RouteBastion, it does not provide the capability to dynamically select different VRP APIs.}
+\end{itemize}

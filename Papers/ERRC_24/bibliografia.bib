@@ -1,0 +1,200 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%% INSERINDO COMENTÁRIOS EM ARQUIVOS .bib %%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% 1. Como em outros arquivos LaTeX, comentários são iniciados por "%" e,
+%    portanto, é preciso usar "\%" para imprimir o caractere "%". Esquecer
+%    disso pode gerar erros difíceis de encontrar!
+%
+% 2. Não é possível inserir comentários dentro de uma entrada, apenas fora.
+%
+% 3. Não é possível incluir o caractere arroba em um comentário.
+%
+% 4. Se quiser desabilitar temporariamente um campo ("comentar" o campo),
+%    troque seu nome para algum nome inválido, como "author-disable".
+%    Se quiser fazer alguma observação permanente dentro de uma entrada,
+%    você também pode usar algum nome de campo inválido, como "lembrete",
+%    ou usar o campo "annotation", que normalmente é ignorado.
+%
+% 5. Se quiser desabilitar temporariamente uma entrada inteira ("comentar" a
+%    entrada), não basta colocar "%" nas linhas correspondentes por causa do
+%    caractere arroba; também é preciso remover a arroba.
+%
+% 6. Na verdade, as regras não são bem essas, mas segui-las é uma boa ideia:
+%    https://tex.stackexchange.com/a/262282
+
+
+% Esta entrada está comentada, ou seja, não tem efeito: se houvesse uma
+% referência a ela no texto, a referência ficaria inválida. Observe que,
+% para isso, o caractere arroba foi apagado!
+%Book{JW82,
+% author    = {Richard A. Johnson and Dean W. Wichern},
+% title     = {Applied Multivariate Statistical Analysis},
+% publisher = {Prentice-Hall},
+% year      = {1983}
+%}
+
+@online{c4model,
+    author = {Simon Brown},
+    title = {The C4 model for visualising software architecture},
+    year = {2024},
+    month = {September},
+    urldate = {2024-10-05},
+    url = {c4model.com},
+}
+
+@online{grpc,
+    author = {Google},
+    title = {gRPC: A high performance, open source universal RPC framework},
+    year = {2024},
+    month = {October},
+    urldate = {2024-10-05},
+    url = {grpc.io},
+}
+
+@book{gopl,
+ author   = {Alan A. A. Donovan and Brian W. Kernighan},
+ title    = {A Linguagem de Programação Go},
+ year     = {2021},
+ edition  = 2,
+ publisher= {Novatec Editora Ltda.},
+ month    = july,
+}
+
+@Article{atam,
+ author   = {Rick Kazman and Mark Klein and Mario Barbacci and Tom Longstaff and Howard Lipson and Jeromy Carriere},
+ title    = {The Architecture Tradeoff Analysis Method},
+ journal  = {IEEE International Conference on Engineering of Complex Computer Systems},
+ volume   = {4},
+ year     = {1998},
+}
+
+@article{broker,
+    author = {Smitha Sundareswaran and Anna Squicciarini and Dan Lin},
+    title = {A Brokerage-Based Approach for Cloud Service Selection},
+    journal = {IEEE International Conference on Cloud Computing},
+    volume = {5},
+    year = {2012},
+}
+
+@article{broker2,
+    author = {Raghavendra Achar and P. Santhi Thilagam},
+    title = {A Broker Based Approach for Cloud Provider Selection},
+    journal = {International Conference on Advances in Computing, Communications and Informatics (ICACCI)},
+    volume = {1},
+    year = {2014},
+}
+
+@article{selection,
+    author = {Rădulescu Constanţa Zoie and Balog Alexandru and Rădulescu Delia Mihaela and Dumitrache Mihail},
+    title = {A decision making framework for weighting and ranking criteria for Cloud provider selection},
+    journal = {International Conference on System Theory, Control and Computing (ICSTCC)},
+    volume = {20},
+    year = {2016},
+}
+
+@article{selection2,
+    author = {Gaurav Baranwal and Deo Prakash Vidyarthi},
+    title = {A framework for selection of best cloud service provider using ranked voting method},
+    journal = {IEEE International Advance Computing Conference (IACC)},
+    volume = {1},
+    year = {2014},
+}
+
+@ARTICLE{MCDM2022ieeeaccess,
+  author={Gyani, Jayadev and Ahmed, Ahsan and Haq, Mohd Anul},
+  journal={IEEE Access}, 
+  title={MCDM and Various Prioritization Methods in AHP for CSS: A Comprehensive Review}, 
+  year={2022},
+  volume={10},
+  number={},
+  pages={33492-33511},
+  keywords={Cloud computing;Costs;Decision making;Security;Software as a service;Phase change materials;Computer architecture;Cloud service providers (CSPs);multi-criteria decision-making (MCDM);cloud service selection (CSS);pair-wise comparison matrix (PCM);analytic hierarchy process (AHP)},
+  doi={10.1109/ACCESS.2022.3161742}}
+
+
+@article{Brokering2019JPDC,
+title = {Brokering in interconnected cloud computing environments: A survey},
+journal = {Journal of Parallel and Distributed Computing},
+volume = {133},
+pages = {193-209},
+year = {2019},
+issn = {0743-7315},
+doi = {https://doi.org/10.1016/j.jpdc.2018.08.001},
+url = {https://www.sciencedirect.com/science/article/pii/S0743731518305719},
+author = {Sameer Singh Chauhan and Emmanuel S. Pilli and R.C. Joshi and Girdhari Singh and M.C. Govil},
+keywords = {Cloud computing, Cloud broker, Inter-cloud, Federated cloud, Multi-cloud, Hybrid cloud},
+}
+
+@ARTICLE{cloudbrokersms2024ieeetransactions,
+  author={Khorasani, Neda and Ramezani, Faeze and Taheri, Hoda and Mohammadi, Neda and Khoshdel, Parisa and Taghavi, Bahareh and Abrishami, Saeid and Rasoolzadegan, Abbas},
+  journal={IEEE Transactions on Services Computing}, 
+  title={Cloud Broker: A Systematic Mapping Study}, 
+  year={2024},
+  volume={17},
+  number={5},
+  pages={2989-3005},
+  keywords={Cloud computing;Systematics;Market research;Pricing;Costs;Complexity theory;Switches;Cloud broker;service composition;service selection;systematic mapping study (SMS);systematic review},
+  doi={10.1109/TSC.2024.3442541}}
+
+
+@article{SHAHIN2024104437,
+title = {A survey of Flex-Route Transit problem and its link with Vehicle Routing Problem},
+journal = {Transportation Research Part C: Emerging Technologies},
+volume = {158},
+pages = {104437},
+year = {2024},
+issn = {0968-090X},
+doi = {https://doi.org/10.1016/j.trc.2023.104437},
+url = {https://www.sciencedirect.com/science/article/pii/S0968090X23004278},
+author = {Reza Shahin and Pierre Hosteins and Paola Pellegrini and Pierre-Olivier Vandanjon and Luca Quadrifoglio},
+keywords = {Transportation, Flex-Route Transit, Vehicle Routing problem, Demand Responsive Transit, Dial-a-Ride Problem},
+}
+
+@ARTICLE{10379532,
+  author={Bogyrbayeva, Aigerim and Meraliyev, Meraryslan and Mustakhov, Taukekhan and Dauletbayev, Bissenbay},
+  journal={IEEE Transactions on Intelligent Transportation Systems}, 
+  title={Machine Learning to Solve Vehicle Routing Problems: A Survey}, 
+  year={2024},
+  volume={25},
+  number={6},
+  pages={4754-4772},
+  keywords={Routing;Machine learning;Computational modeling;Surveys;Vehicle routing;Transportation;Logistics;Reinforcement learning;supervised learning;neural combinatorial optimization;vehicle routing},
+  doi={10.1109/TITS.2023.3334976}}
+
+@article{apiGateways,
+    author={Fikri Aydemir and Fatih Basçiftçi},
+    title={Performance and Availability Analysis of API Design Techniques for API Gateways},
+    journal={Arabian Journal for Science and Engineering},
+    year={2024},
+    keywords={API Gateway;API design technique;Microservices architecture;REST;gRPC;Apache Thrift}
+}
+
+@article{gmaps2024,
+title = {Integration of Google Maps API with mathematical modeling for solving the Real-Time VRP},
+journal = {Transportation Research Procedia},
+volume = {78},
+pages = {32-39},
+year = {2024},
+note = {25th Euro Working Group on Transportation Meeting},
+issn = {2352-1465},
+doi = {https://doi.org/10.1016/j.trpro.2024.02.005},
+url = {https://www.sciencedirect.com/science/article/pii/S2352146524000589},
+author = {Andres MuÃ±oz-Villamizar and Javier Faulin and Lorena Reyes-Rubiano and Rafael Henriquez-Machado and Elyn Solano-Charris},
+keywords = {Vehicle Routing Problem, City Logistics, Google Maps API, Case Study},
+}
+
+@article{ant2024,
+title = {Impact of ACO intelligent vehicle real-time software in finding shortest path},
+journal = {Software Impacts},
+volume = {19},
+pages = {100625},
+year = {2024},
+issn = {2665-9638},
+doi = {https://doi.org/10.1016/j.simpa.2024.100625},
+url = {https://www.sciencedirect.com/science/article/pii/S2665963824000137},
+author = {Jai Keerthy {Chowlur Revanna} and Nushwan Yousif Baithoon Al-Nakash},
+keywords = {Vehicle routing problem, Data clustering, Dynamic routing system, ACO-GA optimization, Artificial intelligence, G-map},
+}
+
+@article{Cavecchia2024, author = {Cavecchia, M. and Alves de Queiroz, T. and Iori, M. and others}, title = {An Optimization-Based Decision Support System for Multi-trip Vehicle Routing Problems}, journal = {SN Computer Science}, volume = {5}, pages = {225}, year = {2024}, doi = {10.1007/s42979-023-02540-3}, url = {https://doi.org/10.1007/s42979-023-02540-3}}
