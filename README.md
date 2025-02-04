@@ -8,6 +8,8 @@ So, this is my Master Thesis project, a Broker for Vehicle Routing Problem (VRP)
 
 Diagrams and other documentation for the project.
 
+- DB Docs: https://dbdocs.io/pietro.developer/RouteBastionDB
+
 ### Packages
 
 Source code.
