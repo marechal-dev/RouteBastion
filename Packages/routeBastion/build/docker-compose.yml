@@ -5,6 +5,10 @@ volumes:
     driver: local
   db_data:
     driver: local
+  grafana_data:
+    driver: local
+  prometheus_data:
+    driver: local
 
 services:
   database:
@@ -28,11 +32,60 @@ services:
     volumes:
       - 'cache_data:/data'
 
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: 'jaeger'
+    depends_on:
+      - otel-collector
+    ports:
+      - "16686:16686"  # Web UI
+      - "6831:6831/udp"  # UDP for traces
+      - "24317:4317"  # OTLP gRPC (changed to avoid conflicts)
+      - "24318:4318"  # OTLP HTTP (changed to avoid conflicts)
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: 'otel-collector'
+    command: ["--config=/etc/otel-collector-config.yml"]
+    volumes:
+      - ../otel-collector-config.yml:/etc/otel-collector-config.yml:ro
+    ports:
+      - "14317:4317"  # gRPC5
+      - "14318:4318"  # HTTP
+    depends_on:
+      - prometheus
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: 'prometheus'
+    volumes:
+      - ../prometheus.yml:/etc/prometheus.yml
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: 'grafana'
+    volumes:
+      - grafana_data:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+
   api-dev:
     container_name: 'route-bastion-api-dev'
     build:
       context: ${PWD}/Packages/routeBastion
       dockerfile: build/app.dev.Dockerfile
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:14317  # ✅ Updated
     ports:
       - 8080:8080
     depends_on:
