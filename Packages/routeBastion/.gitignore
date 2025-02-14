@@ -12,6 +12,9 @@ bin
 # .env files
 app.env
 
+# Temporary
+tmp
+
 # Test binary, build with `go test -c`
 *.test
 

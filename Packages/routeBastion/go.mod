@@ -1,6 +1,6 @@
 module github.com/marechal-dev/RouteBastion/Packages/routeBastion
 
-go 1.23.2
+go 1.24.0
 
 require (
 	github.com/bytedance/sonic v1.12.8 // indirect

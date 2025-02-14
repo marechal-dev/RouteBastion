@@ -1,0 +1,42 @@
+name: 'Route-Bastion-Broker'
+
+volumes:
+  cache_data:
+    driver: local
+  db_data:
+    driver: local
+
+services:
+  database:
+    image: bitnami/postgresql:17.2.0
+    container_name: 'route-bastion-api-db'
+    restart: always
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRESQL_USERNAME=docker
+      - POSTGRESQL_PASSWORD=docker
+      - POSTGRESQL_DATABASE=route_bastion
+    volumes:
+      - 'db_data:/bitnami/postgresql'
+
+  cache:
+    image: redis:7.4.2
+    container_name: 'route-bastion-api-cache'
+    ports:
+      - 6379:6379
+    volumes:
+      - 'cache_data:/data'
+
+  api-dev:
+    container_name: 'route-bastion-api-dev'
+    build:
+      context: ${PWD}/Packages/routeBastion
+      dockerfile: build/app.dev.Dockerfile
+    ports:
+      - 8080:8080
+    depends_on:
+      - database
+      - cache
+    volumes:
+      - .:/usr/app
