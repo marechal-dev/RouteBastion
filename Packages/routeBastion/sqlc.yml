@@ -1,0 +1,32 @@
+version: "2"
+
+overrides:
+  go:
+    rename:
+      client: "ModelClient"
+      limitation: "ModelLimitation"
+      provider: "ModelProvider"
+      provider_communication: "ModelProviderCommunication"
+      provider_constraints_and_feature: "ModelProviderConstraintsAndFeatures"
+      optimization: "ModelOptimization"
+      optimization_waypoint: "ModelOptimizationWaypoint"
+    overrides:
+      - db_type: "uuid"
+        go_type:
+          import: "github.com/google/uuid"
+          type: "UUID"
+      - db_type: "timestamp"
+        go_type:
+          import: "time"
+          type: "Time"
+
+sql:
+  - engine: "postgresql"
+    queries: "database/queries.sql"
+    schema: "database/schema.sql"
+    gen:
+      go:
+        sql_package: "pgx/v5"
+        emit_pointers_for_null_types: true
+        package: "database"
+        out: "internal/database"
