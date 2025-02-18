@@ -1,22 +1,31 @@
-FROM golang:1.23.2
+FROM golang:1.24.0-alpine AS build
 
 WORKDIR /app
 
-COPY go.mod go.sum ./
+RUN go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
 
+COPY go.mod go.sum ./
 RUN go mod download
 
-ADD internal /app/internal
 ADD cmd /app/cmd
 ADD scripts /app/scripts
+ADD internal /app/internal
+ADD database /app/database
 
-COPY MakeFile ./
+COPY sqlc.yml ./
 COPY app.env ./
 
-RUN make give_permissions
+RUN sqlc generate
 
+RUN make give_permissions
 RUN make all
+
+FROM scratch
+
+WORKDIR /app
+
+COPY --from=build /app/bin/bastion.so ./bin/bastion.so
 
 EXPOSE 8080
 
-CMD ["/bin/bastion.so"]
+ENTRYPOINT ["/bin/bastion.so"]
