@@ -16,21 +16,16 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Debug
-        run: ls
-
-      - name: Set working directory
-        run: cd Packages/routeBastion
-
-      - name: Debug 2
-        run: ls
-
       - name: Setup Go
         uses: actions/setup-go@v4
         with:
           go-version: '1.24.x'
-
+          cache-dependency-path: Packages/routeBastion/go.sum
+          
       - name: Build
+        working-directory: Packages/routeBastion
         run: go build -v ./...
+      
       - name: Test with the Go CLI
+        working-directory: Packages/routeBastion
         run: go test ./...
