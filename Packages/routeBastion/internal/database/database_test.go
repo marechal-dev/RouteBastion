@@ -67,7 +67,7 @@ func TestNew(t *testing.T) {
 		dbPwd  = "docker"
 		dbUser = "docker"
 		dbPort = "5432"
-		dbHost = "database"
+		dbHost = "localhost"
 		dbSchema = "public"
 	)
 	srv := database.NewDatabaseService(
@@ -89,7 +89,7 @@ func TestHealth(t *testing.T) {
 		dbPwd  = "docker"
 		dbUser = "docker"
 		dbPort = "5432"
-		dbHost = "database"
+		dbHost = "localhost"
 		dbSchema = "public"
 	)
 	srv := database.NewDatabaseService(
@@ -122,7 +122,7 @@ func TestClose(t *testing.T) {
 		dbPwd  = "docker"
 		dbUser = "docker"
 		dbPort = "5432"
-		dbHost = "database"
+		dbHost = "localhost"
 		dbSchema = "public"
 	)
 	srv := database.NewDatabaseService(
