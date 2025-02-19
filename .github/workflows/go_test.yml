@@ -15,9 +15,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Debug
+        run: ls
+
       - name: Set working directory
         run: cd Packages/routeBastion
-        
+
+      - name: Debug 2
+        run: ls
+
       - name: Setup Go
         uses: actions/setup-go@v4
         with:
