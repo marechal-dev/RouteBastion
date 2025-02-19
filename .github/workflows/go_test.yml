@@ -2,6 +2,7 @@ name: Run Tests
 on:
   push:
     paths:
+      - '.github/workflows/**'
       - 'Packages/routeBastion/**'
   pull_request:
     paths:
