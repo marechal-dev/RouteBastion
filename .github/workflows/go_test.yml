@@ -1,0 +1,29 @@
+name: Run Tests
+on:
+  push:
+    paths:
+      - 'Packages/routeBastion/**'
+  pull_request:
+    paths:
+      - 'Packages/routeBastion/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set working directory
+        run: cd Packages/routeBastion
+        
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.24.x'
+
+      - name: Build
+        run: go build -v ./...
+      - name: Test with the Go CLI
+        run: go test ./...

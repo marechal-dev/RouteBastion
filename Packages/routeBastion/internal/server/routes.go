@@ -14,14 +14,10 @@ func (s *Server) RegisterRoutes() http.Handler {
 		AllowOrigins:     []string{"*"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
 		AllowHeaders:     []string{"Accept", "Content-Type", "X-API-Key"},
-		AllowCredentials: true, // Enable cookies/auth
+		AllowCredentials: true,
 	}))
 
-	r.GET("/health", s.healthHandler)
+	r.GET("/health", s.healthController.Index)
 
 	return r
-}
-
-func (s *Server) healthHandler(c *gin.Context) {
-	c.JSON(http.StatusOK, s.db.Health())
 }

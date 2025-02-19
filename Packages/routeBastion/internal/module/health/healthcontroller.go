@@ -1,0 +1,26 @@
+package health
+
+import (
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/database"
+)
+
+type HealthController interface {
+	Index(c *gin.Context)
+}
+
+type healthController struct {
+	db database.Service
+}
+
+func NewHealthController(db database.Service) HealthController {
+	return &healthController{
+		db: db,
+	}
+}
+
+func (h *healthController) Index(c *gin.Context) {
+	c.JSON(http.StatusOK, h.db.Health())
+}
