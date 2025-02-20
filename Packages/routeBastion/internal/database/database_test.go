@@ -6,15 +6,20 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/database"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
 	"github.com/testcontainers/testcontainers-go/wait"
 )
 
-func mustStartPostgresContainer() (func(context.Context, ...testcontainers.TerminateOption) error, error) {
+var (
+	schemaID = ""
+)
+
+func mustStartPostgresContainer() (*postgres.PostgresContainer, func(context.Context, ...testcontainers.TerminateOption) error, error) {
 	var (
-		dbName = "route_bastion_test"
+		dbName = "route_bastion"
 		dbPwd  = "docker"
 		dbUser = "docker"
 	)
@@ -31,30 +36,55 @@ func mustStartPostgresContainer() (func(context.Context, ...testcontainers.Termi
 				WithStartupTimeout(5*time.Second)),
 	)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-
 
 	_, err = dbContainer.Host(context.Background())
 	if err != nil {
-		return dbContainer.Terminate, err
+		return nil, dbContainer.Terminate, err
 	}
 
 	_, err = dbContainer.MappedPort(context.Background(), "5432/tcp")
 	if err != nil {
-		return dbContainer.Terminate, err
+		return nil, dbContainer.Terminate, err
 	}
 
-	return dbContainer.Terminate, err
+	return dbContainer, dbContainer.Terminate, err
 }
 
 func TestMain(m *testing.M) {
-	teardown, err := mustStartPostgresContainer()
+	container, teardown, err := mustStartPostgresContainer()
 	if err != nil {
 		log.Fatalf("could not start postgres container: %v", err)
 	}
 
+	id, err := uuid.NewV6()
+	if err != nil {
+		log.Fatalf("could not generate new UUID V6: %v", err)
+	}
+
+	schemaID = id.String()
+
+	log.Printf("generated schema id: %s", schemaID)
+
 	m.Run()
+
+	teardownCmd := []string{
+		"psql",
+		"-U",
+		"docker",
+		"-d",
+		"route_bastion",
+		"-c",
+		"'DROP SCHEMA IF EXISTS \"" + schemaID + "\" CASCADE'",
+	}
+
+	_, _, cmdErr := container.Exec(context.Background(), teardownCmd)
+	if cmdErr != nil {
+		log.Fatalf("could not drop schema %s: %v", schemaID, cmdErr)
+	}
+
+	log.Printf("teardown command executed successfully")
 
 	if teardown != nil && teardown(context.Background()) != nil {
 		log.Fatalf("could not teardown postgres container: %v", err)
@@ -63,12 +93,12 @@ func TestMain(m *testing.M) {
 
 func TestNew(t *testing.T) {
 	var (
-		dbName = "route_bastion_test"
+		dbName = "route_bastion"
 		dbPwd  = "docker"
 		dbUser = "docker"
 		dbPort = "5432"
 		dbHost = "localhost"
-		dbSchema = "public"
+		dbSchema = schemaID
 	)
 	srv := database.NewDatabaseService(
 		dbName,
@@ -85,12 +115,12 @@ func TestNew(t *testing.T) {
 
 func TestHealth(t *testing.T) {
 	var (
-		dbName = "route_bastion_test"
+		dbName = "route_bastion"
 		dbPwd  = "docker"
 		dbUser = "docker"
 		dbPort = "5432"
 		dbHost = "localhost"
-		dbSchema = "public"
+		dbSchema = schemaID
 	)
 	srv := database.NewDatabaseService(
 		dbName,
@@ -118,12 +148,12 @@ func TestHealth(t *testing.T) {
 
 func TestClose(t *testing.T) {
 	var (
-		dbName = "route_bastion_test"
+		dbName = "route_bastion"
 		dbPwd  = "docker"
 		dbUser = "docker"
 		dbPort = "5432"
 		dbHost = "localhost"
-		dbSchema = "public"
+		dbSchema = schemaID
 	)
 	srv := database.NewDatabaseService(
 		dbName,

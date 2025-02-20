@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/database"
-	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/module/health"
+	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/health"
 	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/util"
 )
 

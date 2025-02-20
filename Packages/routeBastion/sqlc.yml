@@ -13,7 +13,7 @@ overrides:
     overrides:
       - db_type: "uuid"
         go_type:
-          import: "github.com/google/uuid"
+          import: "github.com/satori/go.uuid"
           type: "UUID"
       - db_type: "timestamp"
         go_type:

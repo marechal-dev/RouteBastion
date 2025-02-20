@@ -8,13 +8,105 @@ package database
 import (
 	"context"
 
-	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
+	go_uuid "github.com/satori/go.uuid"
 )
+
+const createClient = `-- name: CreateClient :one
+INSERT INTO clients (
+  id, name, api_key
+) VALUES (
+  $1, $2, $3
+) RETURNING id, name, api_key, created_at, modified_at, deleted_at
+`
+
+type CreateClientParams struct {
+	ID     go_uuid.UUID
+	Name   string
+	ApiKey string
+}
+
+func (q *Queries) CreateClient(ctx context.Context, arg CreateClientParams) (ModelClient, error) {
+	row := q.db.QueryRow(ctx, createClient, arg.ID, arg.Name, arg.ApiKey)
+	var i ModelClient
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.ApiKey,
+		&i.CreatedAt,
+		&i.ModifiedAt,
+		&i.DeletedAt,
+	)
+	return i, err
+}
+
+const deleteLimitation = `-- name: DeleteLimitation :exec
+DELETE FROM limitations WHERE limitations.id = $1
+`
+
+func (q *Queries) DeleteLimitation(ctx context.Context, id go_uuid.UUID) error {
+	_, err := q.db.Exec(ctx, deleteLimitation, id)
+	return err
+}
+
+const getAvailableProviders = `-- name: GetAvailableProviders :many
+SELECT
+  providers.id, providers.name, providers.created_at, providers.modified_at, providers.deleted_at,
+  provider_communication.id, provider_communication.provider_id, provider_communication.accessible_with, provider_communication.url, provider_communication.created_at, provider_communication.modified_at, provider_communication.deleted_at,
+  provider_constraints_and_features.id, provider_constraints_and_features.provider_id, provider_constraints_and_features.max_waypoints, provider_constraints_and_features.supports_async_batch_requests
+FROM providers
+  JOIN provider_communication ON providers.id = provider_communication.provider_id
+  JOIN provider_constraints_and_features ON providers.id = provider_constraints_and_features.provider_id
+WHERE providers.deleted_at IS NULL
+ORDER BY providers.name ASC
+`
+
+type GetAvailableProvidersRow struct {
+	ModelProvider                       ModelProvider
+	ModelProviderCommunication          ModelProviderCommunication
+	ModelProviderConstraintsAndFeatures ModelProviderConstraintsAndFeatures
+}
+
+func (q *Queries) GetAvailableProviders(ctx context.Context) ([]GetAvailableProvidersRow, error) {
+	rows, err := q.db.Query(ctx, getAvailableProviders)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetAvailableProvidersRow
+	for rows.Next() {
+		var i GetAvailableProvidersRow
+		if err := rows.Scan(
+			&i.ModelProvider.ID,
+			&i.ModelProvider.Name,
+			&i.ModelProvider.CreatedAt,
+			&i.ModelProvider.ModifiedAt,
+			&i.ModelProvider.DeletedAt,
+			&i.ModelProviderCommunication.ID,
+			&i.ModelProviderCommunication.ProviderID,
+			&i.ModelProviderCommunication.AccessibleWith,
+			&i.ModelProviderCommunication.Url,
+			&i.ModelProviderCommunication.CreatedAt,
+			&i.ModelProviderCommunication.ModifiedAt,
+			&i.ModelProviderCommunication.DeletedAt,
+			&i.ModelProviderConstraintsAndFeatures.ID,
+			&i.ModelProviderConstraintsAndFeatures.ProviderID,
+			&i.ModelProviderConstraintsAndFeatures.MaxWaypoints,
+			&i.ModelProviderConstraintsAndFeatures.SupportsAsyncBatchRequests,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
 
 const getClientByApiKey = `-- name: GetClientByApiKey :one
 SELECT c.id,
   c.name,
+  c.api_key,
   c.created_at,
   c.modified_at,
   c.deleted_at
@@ -22,23 +114,209 @@ FROM clients AS c
 WHERE c.api_key = $1 LIMIT 1
 `
 
-type GetClientByApiKeyRow struct {
-	ID         uuid.UUID
-	Name       string
-	CreatedAt  pgtype.Timestamp
-	ModifiedAt pgtype.Timestamp
-	DeletedAt  pgtype.Timestamp
-}
-
-func (q *Queries) GetClientByApiKey(ctx context.Context, apiKey string) (GetClientByApiKeyRow, error) {
+func (q *Queries) GetClientByApiKey(ctx context.Context, apiKey string) (ModelClient, error) {
 	row := q.db.QueryRow(ctx, getClientByApiKey, apiKey)
-	var i GetClientByApiKeyRow
+	var i ModelClient
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
+		&i.ApiKey,
 		&i.CreatedAt,
 		&i.ModifiedAt,
 		&i.DeletedAt,
 	)
 	return i, err
+}
+
+const getLimitationsByClientID = `-- name: GetLimitationsByClientID :many
+SELECT l.id,
+  l.client_id,
+  l.kind,
+  l.value,
+  l.created_at,
+  l.modified_at,
+  l.deleted_at
+FROM limitations AS l
+WHERE l.client_id = $1 AND l.deleted_at IS NULL
+`
+
+func (q *Queries) GetLimitationsByClientID(ctx context.Context, clientID go_uuid.UUID) ([]ModelLimitation, error) {
+	rows, err := q.db.Query(ctx, getLimitationsByClientID, clientID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ModelLimitation
+	for rows.Next() {
+		var i ModelLimitation
+		if err := rows.Scan(
+			&i.ID,
+			&i.ClientID,
+			&i.Kind,
+			&i.Value,
+			&i.CreatedAt,
+			&i.ModifiedAt,
+			&i.DeletedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getOptimizationHistoryByCustomerID = `-- name: GetOptimizationHistoryByCustomerID :many
+SELECT
+  optimizations.id, optimizations.client_id, optimizations.selected_cloud_id, optimizations.status, optimizations.kind, optimizations.started_at, optimizations.ended_at, optimizations.created_at, optimizations.modified_at,
+  optimization_waypoints.id, optimization_waypoints.optimization_id, optimization_waypoints.latitude, optimization_waypoints.longitude
+FROM optimizations
+  JOIN optimization_waypoints ON optimizations.id = optimization_waypoints.optimization_id
+WHERE optimizations.client_id = $1
+ORDER BY optimizations.created_at DESC
+`
+
+type GetOptimizationHistoryByCustomerIDRow struct {
+	ModelOptimization         ModelOptimization
+	ModelOptimizationWaypoint ModelOptimizationWaypoint
+}
+
+func (q *Queries) GetOptimizationHistoryByCustomerID(ctx context.Context, clientID go_uuid.UUID) ([]GetOptimizationHistoryByCustomerIDRow, error) {
+	rows, err := q.db.Query(ctx, getOptimizationHistoryByCustomerID, clientID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetOptimizationHistoryByCustomerIDRow
+	for rows.Next() {
+		var i GetOptimizationHistoryByCustomerIDRow
+		if err := rows.Scan(
+			&i.ModelOptimization.ID,
+			&i.ModelOptimization.ClientID,
+			&i.ModelOptimization.SelectedCloudID,
+			&i.ModelOptimization.Status,
+			&i.ModelOptimization.Kind,
+			&i.ModelOptimization.StartedAt,
+			&i.ModelOptimization.EndedAt,
+			&i.ModelOptimization.CreatedAt,
+			&i.ModelOptimization.ModifiedAt,
+			&i.ModelOptimizationWaypoint.ID,
+			&i.ModelOptimizationWaypoint.OptimizationID,
+			&i.ModelOptimizationWaypoint.Latitude,
+			&i.ModelOptimizationWaypoint.Longitude,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getProviderDetailsByID = `-- name: GetProviderDetailsByID :one
+SELECT
+	providers.id, providers.name, providers.created_at, providers.modified_at, providers.deleted_at,
+  provider_communication.id, provider_communication.provider_id, provider_communication.accessible_with, provider_communication.url, provider_communication.created_at, provider_communication.modified_at, provider_communication.deleted_at,
+  provider_constraints_and_features.id, provider_constraints_and_features.provider_id, provider_constraints_and_features.max_waypoints, provider_constraints_and_features.supports_async_batch_requests
+FROM providers
+  JOIN provider_communication ON providers.id = provider_communication.provider_id
+  JOIN provider_constraints_and_features ON providers.id = provider_constraints_and_features.provider_id
+WHERE providers.id = $1
+`
+
+type GetProviderDetailsByIDRow struct {
+	ModelProvider                       ModelProvider
+	ModelProviderCommunication          ModelProviderCommunication
+	ModelProviderConstraintsAndFeatures ModelProviderConstraintsAndFeatures
+}
+
+func (q *Queries) GetProviderDetailsByID(ctx context.Context, id go_uuid.UUID) (GetProviderDetailsByIDRow, error) {
+	row := q.db.QueryRow(ctx, getProviderDetailsByID, id)
+	var i GetProviderDetailsByIDRow
+	err := row.Scan(
+		&i.ModelProvider.ID,
+		&i.ModelProvider.Name,
+		&i.ModelProvider.CreatedAt,
+		&i.ModelProvider.ModifiedAt,
+		&i.ModelProvider.DeletedAt,
+		&i.ModelProviderCommunication.ID,
+		&i.ModelProviderCommunication.ProviderID,
+		&i.ModelProviderCommunication.AccessibleWith,
+		&i.ModelProviderCommunication.Url,
+		&i.ModelProviderCommunication.CreatedAt,
+		&i.ModelProviderCommunication.ModifiedAt,
+		&i.ModelProviderCommunication.DeletedAt,
+		&i.ModelProviderConstraintsAndFeatures.ID,
+		&i.ModelProviderConstraintsAndFeatures.ProviderID,
+		&i.ModelProviderConstraintsAndFeatures.MaxWaypoints,
+		&i.ModelProviderConstraintsAndFeatures.SupportsAsyncBatchRequests,
+	)
+	return i, err
+}
+
+const insertLimitation = `-- name: InsertLimitation :one
+INSERT INTO limitations (
+  client_id, kind, value
+) VALUES (
+  $1, $2, $3
+) RETURNING id, client_id, kind, value, created_at, modified_at, deleted_at
+`
+
+type InsertLimitationParams struct {
+	ClientID go_uuid.UUID
+	Kind     LimitationKind
+	Value    []byte
+}
+
+func (q *Queries) InsertLimitation(ctx context.Context, arg InsertLimitationParams) (ModelLimitation, error) {
+	row := q.db.QueryRow(ctx, insertLimitation, arg.ClientID, arg.Kind, arg.Value)
+	var i ModelLimitation
+	err := row.Scan(
+		&i.ID,
+		&i.ClientID,
+		&i.Kind,
+		&i.Value,
+		&i.CreatedAt,
+		&i.ModifiedAt,
+		&i.DeletedAt,
+	)
+	return i, err
+}
+
+const updateLimitationKindAndValue = `-- name: UpdateLimitationKindAndValue :exec
+UPDATE limitations
+  SET kind = $2,
+    value = $3
+WHERE limitations.id = $1
+`
+
+type UpdateLimitationKindAndValueParams struct {
+	ID    go_uuid.UUID
+	Kind  LimitationKind
+	Value []byte
+}
+
+func (q *Queries) UpdateLimitationKindAndValue(ctx context.Context, arg UpdateLimitationKindAndValueParams) error {
+	_, err := q.db.Exec(ctx, updateLimitationKindAndValue, arg.ID, arg.Kind, arg.Value)
+	return err
+}
+
+const updateLimitationValue = `-- name: UpdateLimitationValue :exec
+UPDATE limitations
+  SET value = $2
+WHERE limitations.id = $1
+`
+
+type UpdateLimitationValueParams struct {
+	ID    go_uuid.UUID
+	Value []byte
+}
+
+func (q *Queries) UpdateLimitationValue(ctx context.Context, arg UpdateLimitationValueParams) error {
+	_, err := q.db.Exec(ctx, updateLimitationValue, arg.ID, arg.Value)
+	return err
 }

@@ -8,8 +8,8 @@ import (
 	"database/sql/driver"
 	"fmt"
 
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
+	go_uuid "github.com/satori/go.uuid"
 )
 
 type CommunicationMethod string
@@ -187,7 +187,7 @@ func (ns NullRequestKind) Value() (driver.Value, error) {
 }
 
 type ModelClient struct {
-	ID         uuid.UUID
+	ID         go_uuid.UUID
 	Name       string
 	ApiKey     string
 	CreatedAt  pgtype.Timestamp
@@ -196,8 +196,8 @@ type ModelClient struct {
 }
 
 type ModelLimitation struct {
-	ID         uuid.UUID
-	ClientID   uuid.UUID
+	ID         go_uuid.UUID
+	ClientID   go_uuid.UUID
 	Kind       LimitationKind
 	Value      []byte
 	CreatedAt  pgtype.Timestamp
@@ -206,9 +206,9 @@ type ModelLimitation struct {
 }
 
 type ModelOptimization struct {
-	ID              uuid.UUID
-	ClientID        uuid.UUID
-	SelectedCloudID uuid.UUID
+	ID              go_uuid.UUID
+	ClientID        go_uuid.UUID
+	SelectedCloudID go_uuid.UUID
 	Status          OptimizationStatus
 	Kind            RequestKind
 	StartedAt       pgtype.Timestamp
@@ -218,14 +218,14 @@ type ModelOptimization struct {
 }
 
 type ModelOptimizationWaypoint struct {
-	ID             uuid.UUID
-	OptimizationID uuid.UUID
+	ID             go_uuid.UUID
+	OptimizationID go_uuid.UUID
 	Latitude       float64
 	Longitude      float64
 }
 
 type ModelProvider struct {
-	ID         uuid.UUID
+	ID         go_uuid.UUID
 	Name       string
 	CreatedAt  pgtype.Timestamp
 	ModifiedAt pgtype.Timestamp
@@ -233,8 +233,8 @@ type ModelProvider struct {
 }
 
 type ModelProviderCommunication struct {
-	ID             uuid.UUID
-	ProviderID     uuid.UUID
+	ID             go_uuid.UUID
+	ProviderID     go_uuid.UUID
 	AccessibleWith CommunicationMethod
 	Url            string
 	CreatedAt      pgtype.Timestamp
@@ -243,8 +243,8 @@ type ModelProviderCommunication struct {
 }
 
 type ModelProviderConstraintsAndFeatures struct {
-	ID                         uuid.UUID
-	ProviderID                 uuid.UUID
+	ID                         go_uuid.UUID
+	ProviderID                 go_uuid.UUID
 	MaxWaypoints               int32
 	SupportsAsyncBatchRequests bool
 }
