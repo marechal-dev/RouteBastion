@@ -4,10 +4,10 @@ import (
 	"time"
 
 	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/database"
-	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/clients/entities"
+	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/clients/domain/entities"
 )
 
-func ModelToDomain(model *database.ModelClient) *entities.Client {
+func ToDomain(model *database.ModelClient) *entities.Client {
 	var modifiedAt *time.Time = nil
 	var deletedAt *time.Time = nil
 

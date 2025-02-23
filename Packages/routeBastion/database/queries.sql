@@ -15,6 +15,11 @@ SELECT c.id,
 FROM clients AS c
 WHERE c.api_key = $1 LIMIT 1;
 
+-- name: DisableClient :exec
+UPDATE clients
+  SET deleted_at = $2
+WHERE clients.id = $1;
+
 -- name: InsertLimitation :one
 INSERT INTO limitations (
   client_id, kind, value

@@ -17,7 +17,15 @@ func (s *Server) RegisterRoutes() http.Handler {
 		AllowCredentials: true,
 	}))
 
+	// Health-check
 	r.GET("/health", s.healthController.Index)
+
+	// Clients
+	clients := r.Group("/clients")
+	{
+		clients.GET("/:apiKey", s.clientsController.GetOneByApiKey)
+		clients.POST("/", s.clientsController.Create)
+	}
 
 	return r
 }

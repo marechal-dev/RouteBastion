@@ -7,8 +7,10 @@ import (
 	"time"
 
 	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/database"
-	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/health"
 	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/util"
+
+	clients "github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/clients/infrastructure"
+	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/health"
 )
 
 type Server struct {
@@ -18,6 +20,7 @@ type Server struct {
 	queries *database.Queries
 
 	healthController health.HealthController
+	clientsController clients.ClientsController
 }
 
 func NewServer(config util.AppEnvConfig) *http.Server {
@@ -57,4 +60,5 @@ func NewServer(config util.AppEnvConfig) *http.Server {
 
 func (s *Server) RegisterControllers() {
 	s.healthController = health.NewHealthController(s.db)
+	s.clientsController = clients.NewClientsController(s.queries)
 }

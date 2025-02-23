@@ -57,6 +57,7 @@ func (c *Client) Name() string {
 
 func (c *Client) SetName(name string) {
 	c.name = name
+	c.touch()
 }
 
 func (c *Client) ApiKey() string {
@@ -65,6 +66,7 @@ func (c *Client) ApiKey() string {
 
 func (c *Client) SetApiKey(apiKey string) {
 	c.apiKey = apiKey
+	c.touch()
 }
 
 func (c *Client) CreatedAt() *time.Time {
@@ -79,6 +81,11 @@ func (c *Client) DeletedAt() *time.Time {
 	return c.deletedAt
 }
 
+func (c *Client) Disable() {
+	c.deletedAt = &time.Time{}
+	c.touch()
+}
+
 func (c *Client) IsDisabled() bool {
 	if c.deletedAt == nil {
 		return false
@@ -88,4 +95,8 @@ func (c *Client) IsDisabled() bool {
 	nowUNIX := now.Unix()
 
 	return c.deletedAt.Unix() > nowUNIX
+}
+
+func (c *Client) touch() {
+	c.modifiedAt = &time.Time{}
 }

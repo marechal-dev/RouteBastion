@@ -8,6 +8,7 @@ package database
 import (
 	"context"
 
+	"github.com/jackc/pgx/v5/pgtype"
 	go_uuid "github.com/satori/go.uuid"
 )
 
@@ -45,6 +46,22 @@ DELETE FROM limitations WHERE limitations.id = $1
 
 func (q *Queries) DeleteLimitation(ctx context.Context, id go_uuid.UUID) error {
 	_, err := q.db.Exec(ctx, deleteLimitation, id)
+	return err
+}
+
+const disableClient = `-- name: DisableClient :exec
+UPDATE clients
+  SET deleted_at = $2
+WHERE clients.id = $1
+`
+
+type DisableClientParams struct {
+	ID        go_uuid.UUID
+	DeletedAt pgtype.Timestamp
+}
+
+func (q *Queries) DisableClient(ctx context.Context, arg DisableClientParams) error {
+	_, err := q.db.Exec(ctx, disableClient, arg.ID, arg.DeletedAt)
 	return err
 }
 

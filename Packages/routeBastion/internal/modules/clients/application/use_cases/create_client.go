@@ -1,9 +1,9 @@
 package usecases
 
 import (
+	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/clients/domain/entities"
+	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/clients/domain/repositories"
 	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/clients/dtos"
-	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/clients/entities"
-	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/clients/repositories"
 )
 
 type CreateClientUseCase interface {
