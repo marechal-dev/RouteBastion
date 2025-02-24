@@ -50,7 +50,9 @@ UPDATE limitations
 WHERE limitations.id = $1;
 
 -- name: DeleteLimitation :exec
-DELETE FROM limitations WHERE limitations.id = $1;
+UPDATE limitations
+  SET deleted_at = $2
+WHERE limitations.id = $1;
 
 -- Name: CreateProvider :one
 INSERT INTO providers (

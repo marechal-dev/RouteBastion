@@ -41,11 +41,18 @@ func (q *Queries) CreateClient(ctx context.Context, arg CreateClientParams) (Mod
 }
 
 const deleteLimitation = `-- name: DeleteLimitation :exec
-DELETE FROM limitations WHERE limitations.id = $1
+UPDATE limitations
+  SET deleted_at = $2
+WHERE limitations.id = $1
 `
 
-func (q *Queries) DeleteLimitation(ctx context.Context, id go_uuid.UUID) error {
-	_, err := q.db.Exec(ctx, deleteLimitation, id)
+type DeleteLimitationParams struct {
+	ID        go_uuid.UUID
+	DeletedAt pgtype.Timestamp
+}
+
+func (q *Queries) DeleteLimitation(ctx context.Context, arg DeleteLimitationParams) error {
+	_, err := q.db.Exec(ctx, deleteLimitation, arg.ID, arg.DeletedAt)
 	return err
 }
 

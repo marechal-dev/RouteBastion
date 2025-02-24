@@ -100,7 +100,7 @@ func TestNew(t *testing.T) {
 		dbHost = "localhost"
 		dbSchema = schemaID
 	)
-	srv := database.NewDatabaseService(
+	srv := database.NewDatabaseServiceImpl(
 		dbName,
 		dbPwd,
 		dbUser,
@@ -122,7 +122,7 @@ func TestHealth(t *testing.T) {
 		dbHost = "localhost"
 		dbSchema = schemaID
 	)
-	srv := database.NewDatabaseService(
+	srv := database.NewDatabaseServiceImpl(
 		dbName,
 		dbPwd,
 		dbUser,
@@ -155,7 +155,7 @@ func TestClose(t *testing.T) {
 		dbHost = "localhost"
 		dbSchema = schemaID
 	)
-	srv := database.NewDatabaseService(
+	srv := database.NewDatabaseServiceImpl(
 		dbName,
 		dbPwd,
 		dbUser,

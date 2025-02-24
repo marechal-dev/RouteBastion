@@ -24,9 +24,28 @@ sql:
   - engine: "postgresql"
     queries: "database/queries.sql"
     schema: "database/schema.sql"
+    database:
+      uri: "postgresql://docker:docker@localhost:5432/route_bastion"
     gen:
       go:
         sql_package: "pgx/v5"
         emit_pointers_for_null_types: true
         package: "database"
         out: "internal/database"
+    rules:
+      - sqlc/db-prepare
+      - no-delete
+      - postgresql-query-too-costly
+      - postgresql-no-seq-scan
+
+rules:
+  - name: no-delete
+    message: "don't use delete statements"
+    rule: |
+      query.sql.contains("DELETE")
+  - name: postgresql-query-too-costly
+    message: "Query cost estimate is too high"
+    rule: "postgresql.explain.plan.total_cost > 2.0"
+  - name: postgresql-no-seq-scan
+    message: "Query plan results in a sequential scan"
+    rule: "postgresql.explain.plan.node_type == 'Seq Scan'"

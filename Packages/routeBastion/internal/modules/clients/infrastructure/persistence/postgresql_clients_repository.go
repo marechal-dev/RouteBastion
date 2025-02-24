@@ -12,7 +12,9 @@ type PostgresqlClientsRepository struct {
 	queries *database.Queries
 }
 
-func NewPostgreSQLClientsRepository(queries *database.Queries) *PostgresqlClientsRepository {
+func NewPostgreSQLClientsRepository(db database.Service) *PostgresqlClientsRepository {
+	queries := database.New(db.GetConn())
+
 	return &PostgresqlClientsRepository{
 		queries: queries,
 	}

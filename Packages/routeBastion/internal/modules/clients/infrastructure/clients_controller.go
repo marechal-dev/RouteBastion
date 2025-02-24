@@ -8,17 +8,18 @@ import (
 	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/database"
 	usecases "github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/clients/application/use_cases"
 	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/clients/dtos"
+	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/clients/infrastructure/cryptography"
 	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/clients/infrastructure/persistence"
 	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/clients/infrastructure/presenters"
 )
 
 type ClientsController struct {
-	queries *database.Queries
+	db database.Service
 }
 
-func NewClientsController(queries *database.Queries) ClientsController {
+func NewClientsController(db database.Service) ClientsController {
 	return ClientsController{
-		queries: queries,
+		db: db,
 	}
 }
 
@@ -28,15 +29,16 @@ func (cc *ClientsController) Create(c *gin.Context) {
 	err := c.BindJSON(&dto)
 
 	if err != nil {
-		c.JSON(http.StatusBadRequest, map[string]string{
+		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "Invalid payload",
 		})
 
 		return
 	}
 
-	repository := persistence.NewPostgreSQLClientsRepository(cc.queries)
-	useCase := usecases.NewCreateClientUseCase(repository)
+	repository := persistence.NewPostgreSQLClientsRepository(cc.db)
+	apiKeyGen := cryptography.NewUuidApiKeyGenerator()
+	useCase := usecases.NewCreateClientUseCase(repository, apiKeyGen)
 
 	client := useCase.Execute(dto)
 
@@ -48,7 +50,7 @@ func (cc *ClientsController) Create(c *gin.Context) {
 func (cc *ClientsController) GetOneByApiKey(c *gin.Context) {
 	apiKey := c.Param("apiKey")
 
-	repository := persistence.NewPostgreSQLClientsRepository(cc.queries)
+	repository := persistence.NewPostgreSQLClientsRepository(cc.db)
 	useCase := usecases.NewGetOneClientUseCaseImpl(repository)
 
 	foundClient := useCase.Execute(apiKey)

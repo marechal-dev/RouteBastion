@@ -6,18 +6,20 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/database"
-	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/util"
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
 
+	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/database"
 	clients "github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/clients/infrastructure"
 	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/health"
+	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/server/middlewares"
+	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/util"
 )
 
 type Server struct {
 	port int
 
 	db database.Service
-	queries *database.Queries
 
 	healthController health.HealthController
 	clientsController clients.ClientsController
@@ -26,7 +28,7 @@ type Server struct {
 func NewServer(config util.AppEnvConfig) *http.Server {
 	port, _ := strconv.Atoi(config.ServerPort)
 
-	dbService := database.NewDatabaseService(
+	dbService := database.NewDatabaseServiceImpl(
 		config.DBDatabase,
 		config.DBPassword,
 		config.DBUsername,
@@ -35,13 +37,10 @@ func NewServer(config util.AppEnvConfig) *http.Server {
 		config.DBSchema,
 	)
 
-	dbQueries := database.New(dbService.GetConn())
-
 	newServer := &Server{
 		port: port,
 
 		db: dbService,
-		queries: dbQueries,
 	}
 
 	newServer.RegisterControllers()
@@ -51,7 +50,7 @@ func NewServer(config util.AppEnvConfig) *http.Server {
 		Addr:         fmt.Sprintf(":%d", newServer.port),
 		Handler:      newServer.RegisterRoutes(),
 		IdleTimeout:  time.Minute,
-		ReadTimeout:  10 * time.Second,
+		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 30 * time.Second,
 	}
 
@@ -60,5 +59,30 @@ func NewServer(config util.AppEnvConfig) *http.Server {
 
 func (s *Server) RegisterControllers() {
 	s.healthController = health.NewHealthController(s.db)
-	s.clientsController = clients.NewClientsController(s.queries)
+	s.clientsController = clients.NewClientsController(s.db)
+}
+
+func (s *Server) RegisterRoutes() http.Handler {
+	r := gin.Default()
+
+	r.Use(cors.New(cors.Config{
+		AllowAllOrigins: true,
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
+		AllowHeaders:     []string{"Accept", "Content-Type", "RouteBastion-API-Key"},
+		AllowCredentials: false,
+	}))
+
+	// Health-check
+	r.GET("/health", s.healthController.Index)
+
+	// Clients
+	clients := r.Group("/clients")
+	{
+		clients.GET("/:apiKey", middlewares.ApiKeyRequired(s.db), s.clientsController.GetOneByApiKey)
+		clients.POST("/", s.clientsController.Create)
+	}
+
+	// 
+
+	return r
 }

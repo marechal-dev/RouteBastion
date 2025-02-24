@@ -24,7 +24,7 @@ type Service interface {
 	Close() error
 }
 
-type service struct {
+type DatabaseServiceImpl struct {
 	db *pgxpool.Pool
 }
 
@@ -35,10 +35,10 @@ var (
 	port       = ""
 	host       = ""
 	schema     = ""
-	dbInstance *service
+	dbInstance *DatabaseServiceImpl
 )
 
-func NewDatabaseService(
+func NewDatabaseServiceImpl(
 	dbDatabase string,
 	dbPassword string,
 	dbUsername string,
@@ -65,19 +65,19 @@ func NewDatabaseService(
 	if err != nil {
 		log.Fatalf("Unable to create connection pool: %v\n", err)
 	}
-	dbInstance = &service{
+	dbInstance = &DatabaseServiceImpl{
 		db: pool,
 	}
 	return dbInstance
 }
 
-func (s *service) GetConn() *pgxpool.Pool {
+func (s *DatabaseServiceImpl) GetConn() *pgxpool.Pool {
 	return s.db
 }
 
 // Health checks the health of the database connection by pinging the database.
 // It returns a map with keys indicating various health statistics.
-func (s *service) Health() map[string]string {
+func (s *DatabaseServiceImpl) Health() map[string]string {
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
 
@@ -98,17 +98,17 @@ func (s *service) Health() map[string]string {
 
 	// Get database stats (like open connections, in use, idle, etc.)
 	dbStats := s.db.Stat()
-	stats["max_open_connections"] = strconv.Itoa(int(dbStats.MaxConns())) // Maximum number of open connections
-	stats["total_connections"] = strconv.Itoa(int(dbStats.TotalConns()))  // Total number of established connections
-	stats["in_use"] = strconv.Itoa(int(dbStats.AcquiredConns()))          // Number of connections currently in use
+	stats["maxOpenConnections"] = strconv.Itoa(int(dbStats.MaxConns())) // Maximum number of open connections
+	stats["totalConnections"] = strconv.Itoa(int(dbStats.TotalConns()))  // Total number of established connections
+	stats["connectionsInUse"] = strconv.Itoa(int(dbStats.AcquiredConns()))          // Number of connections currently in use
 	stats["idle"] = strconv.Itoa(int(dbStats.IdleConns()))                // Number of idle connections
-	stats["wait_count"] = strconv.FormatInt(dbStats.AcquireCount(), 10)   // Total number of successful acquires from the pool
-	stats["wait_duration"] = dbStats.AcquireDuration().String()           // Total duration of all successful acquires
-	stats["max_idle_closed"] = strconv.FormatInt(dbStats.MaxIdleDestroyCount(), 10) // Connections closed due to exceeding MaxConnIdleTime
-	stats["max_lifetime_closed"] = strconv.FormatInt(dbStats.MaxLifetimeDestroyCount(), 10) // Connections closed due to exceeding MaxConnLifetime
+	stats["waitCount"] = strconv.FormatInt(dbStats.AcquireCount(), 10)   // Total number of successful acquires from the pool
+	stats["waitDuration"] = dbStats.AcquireDuration().String()           // Total duration of all successful acquires
+	stats["maxIdleClosed"] = strconv.FormatInt(dbStats.MaxIdleDestroyCount(), 10) // Connections closed due to exceeding MaxConnIdleTime
+	stats["maxLifetimeClosed"] = strconv.FormatInt(dbStats.MaxLifetimeDestroyCount(), 10) // Connections closed due to exceeding MaxConnLifetime
 
 	// Evaluate stats to provide a health message
-	if dbStats.TotalConns() > 40 { // Assuming 50 is the max for this example
+	if dbStats.TotalConns() > 40 {
 		stats["message"] = "The database is experiencing heavy load."
 	}
 
@@ -131,7 +131,7 @@ func (s *service) Health() map[string]string {
 // It logs a message indicating the disconnection from the specific database.
 // If the connection is successfully closed, it returns nil.
 // If an error occurs while closing the connection, it returns the error.
-func (s *service) Close() error {
+func (s *DatabaseServiceImpl) Close() error {
 	log.Printf("Disconnected from database: %s", database)
 	s.db.Close()
 	return nil
