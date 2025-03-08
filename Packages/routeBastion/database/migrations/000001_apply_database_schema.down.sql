@@ -1,33 +1,41 @@
--- Drop foreign key constraints
-ALTER TABLE "limitations" DROP CONSTRAINT IF EXISTS "limitations_client_id_fkey";
-ALTER TABLE "optimization_waypoints" DROP CONSTRAINT IF EXISTS "optimization_waypoints_optimization_id_fkey";
-ALTER TABLE "optimizations" DROP CONSTRAINT IF EXISTS "optimizations_client_id_fkey";
-ALTER TABLE "optimizations" DROP CONSTRAINT IF EXISTS "optimizations_selected_cloud_id_fkey";
-ALTER TABLE "provider_communication" DROP CONSTRAINT IF EXISTS "provider_communication_provider_id_fkey";
-ALTER TABLE "provider_constraints_and_features" DROP CONSTRAINT IF EXISTS "provider_constraints_and_features_provider_id_fkey";
+-- Drop Foreign Keys
+ALTER TABLE "vehicles" DROP CONSTRAINT "vehicles_customer_id_fkey";
+ALTER TABLE "provider_constraints_and_features" DROP CONSTRAINT "provider_constraints_and_features_provider_id_fkey";
+ALTER TABLE "provider_communication" DROP CONSTRAINT "provider_communication_provider_id_fkey";
+ALTER TABLE "optimization_vehicles" DROP CONSTRAINT "optimization_vehicles_vehicle_id_fkey";
+ALTER TABLE "optimization_vehicles" DROP CONSTRAINT "optimization_vehicles_optimization_id_fkey";
+ALTER TABLE "optimizations" DROP CONSTRAINT "optimizations_selected_cloud_id_fkey";
+ALTER TABLE "optimizations" DROP CONSTRAINT "optimizations_customer_id_fkey";
+ALTER TABLE "optimization_waypoints" DROP CONSTRAINT "optimization_waypoints_optimization_id_fkey";
+ALTER TABLE "constraints" DROP CONSTRAINT "constraints_customer_id_fkey";
 
--- Drop indexes
-DROP INDEX IF EXISTS "idx_limitations_client_id";
-DROP INDEX IF EXISTS "idx_optimization_id";
-DROP INDEX IF EXISTS "idx_optimizations_client_id";
-DROP INDEX IF EXISTS "idx_optimizations_selected_cloud_id";
-DROP INDEX IF EXISTS "idx_provider_id";
+-- Drop Indexes
 DROP INDEX IF EXISTS "idx_provider_constraints_and_features_provider_id";
+DROP INDEX IF EXISTS "idx_provider_communication_provider_id";
+DROP INDEX IF EXISTS "idx_optimization_vehicle_vehicle_id";
+DROP INDEX IF EXISTS "idx_optimization_vehicle_optimization_id";
+DROP INDEX IF EXISTS "idx_optimizations_selected_cloud_id";
+DROP INDEX IF EXISTS "idx_optimizations_customer_id";
+DROP INDEX IF EXISTS "idx_optimization_id";
+DROP INDEX IF EXISTS "idx_limitations_customer_id";
 
--- Drop tables
+-- Drop Tables
+DROP TABLE IF EXISTS "vehicles";
+DROP TABLE IF EXISTS "providers";
 DROP TABLE IF EXISTS "provider_constraints_and_features";
 DROP TABLE IF EXISTS "provider_communication";
-DROP TABLE IF EXISTS "optimization_waypoints";
+DROP TABLE IF EXISTS "optimization_vehicles";
 DROP TABLE IF EXISTS "optimizations";
-DROP TABLE IF EXISTS "limitations";
-DROP TABLE IF EXISTS "clients";
-DROP TABLE IF EXISTS "providers";
+DROP TABLE IF EXISTS "optimization_waypoints";
+DROP TABLE IF EXISTS "constraints";
+DROP TABLE IF EXISTS "customers";
 
--- Drop types
-DROP TYPE IF EXISTS "limitation_kind";
-DROP TYPE IF EXISTS "optimization_status";
-DROP TYPE IF EXISTS "communication_method";
+-- Drop Types
+DROP TYPE IF EXISTS "cargo_kind";
 DROP TYPE IF EXISTS "request_kind";
+DROP TYPE IF EXISTS "communication_method";
+DROP TYPE IF EXISTS "optimization_status";
+DROP TYPE IF EXISTS "limitation_kind";
 
--- Drop extension
+-- Drop Extension
 DROP EXTENSION IF EXISTS "uuid-ossp";

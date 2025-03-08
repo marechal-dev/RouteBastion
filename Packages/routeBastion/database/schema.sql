@@ -24,18 +24,31 @@ CREATE TYPE "request_kind" AS ENUM (
   'batch'
 );
 
-CREATE TABLE "clients" (
+CREATE TYPE "cargo_kind" AS ENUM (
+  'bulk_cargo',
+  'containerized_cargo',
+  'refrigerated_cargo',
+  'dry_cargo',
+  'alive_cargo',
+  'dangerous_cargo',
+  'fragile_cargo',
+  'indivisible_and_exceptional_cargo',
+  'vehicle_cargo'
+);
+
+CREATE TABLE "customers" (
   "id" uuid PRIMARY KEY NOT NULL DEFAULT (uuid_generate_v4()),
   "name" text NOT NULL,
+  "business_identifier" text UNIQUE NOT NULL,
   "api_key" text UNIQUE NOT NULL,
   "created_at" timestamp NOT NULL DEFAULT (now()),
   "modified_at" timestamp DEFAULT null,
   "deleted_at" timestamp DEFAULT null
 );
 
-CREATE TABLE "limitations" (
+CREATE TABLE "constraints" (
   "id" uuid PRIMARY KEY NOT NULL DEFAULT (uuid_generate_v4()),
-  "client_id" uuid NOT NULL,
+  "customer_id" uuid NOT NULL,
   "kind" limitation_kind NOT NULL,
   "value" jsonb NOT NULL,
   "created_at" timestamp NOT NULL DEFAULT (now()),
@@ -52,14 +65,21 @@ CREATE TABLE "optimization_waypoints" (
 
 CREATE TABLE "optimizations" (
   "id" uuid PRIMARY KEY NOT NULL DEFAULT (uuid_generate_v4()),
-  "client_id" uuid NOT NULL,
+  "customer_id" uuid NOT NULL,
   "selected_cloud_id" uuid NOT NULL,
   "status" optimization_status NOT NULL,
   "kind" request_kind NOT NULL,
+  "cost" money NOT NULL,
   "started_at" timestamp DEFAULT null,
   "ended_at" timestamp DEFAULT null,
   "created_at" timestamp NOT NULL DEFAULT (now()),
   "modified_at" timestamp DEFAULT null
+);
+
+CREATE TABLE "optimization_vehicles" (
+  "optimization_id" uuid NOT NULL,
+  "vehicle_id" uuid NOT NULL,
+  PRIMARY KEY ("optimization_id", "vehicle_id")
 );
 
 CREATE TABLE "provider_communication" (
@@ -87,26 +107,47 @@ CREATE TABLE "providers" (
   "deleted_at" timestamp DEFAULT null
 );
 
-CREATE INDEX "idx_limitations_client_id" ON "limitations" ("client_id");
+CREATE TABLE "vehicles" (
+  "id" uuid PRIMARY KEY NOT NULL DEFAULT (uuid_generate_v4()),
+  "plate" text UNIQUE NOT NULL,
+  "capacity" float8 NOT NULL,
+  "cargo_type" cargo_kind NOT NULL,
+  "customer_id" uuid NOT NULL,
+  "created_at" timestamp NOT NULL DEFAULT (now()),
+  "modified_at" timestamp DEFAULT null,
+  "deleted_at" timestamp DEFAULT null
+);
+
+CREATE INDEX "idx_limitations_customer_id" ON "constraints" ("customer_id");
 
 CREATE INDEX "idx_optimization_id" ON "optimization_waypoints" ("optimization_id");
 
-CREATE INDEX "idx_optimizations_client_id" ON "optimizations" ("client_id");
+CREATE INDEX "idx_optimizations_customer_id" ON "optimizations" ("customer_id");
 
 CREATE INDEX "idx_optimizations_selected_cloud_id" ON "optimizations" ("selected_cloud_id");
 
-CREATE INDEX "idx_provider_id" ON "provider_communication" ("provider_id");
+CREATE INDEX "idx_optimization_vehicle_optimization_id" ON "optimization_vehicles" ("optimization_id");
+
+CREATE INDEX "idx_optimization_vehicle_vehicle_id" ON "optimization_vehicles" ("vehicle_id");
+
+CREATE INDEX "idx_provider_communication_provider_id" ON "provider_communication" ("provider_id");
 
 CREATE INDEX "idx_provider_constraints_and_features_provider_id" ON "provider_constraints_and_features" ("provider_id");
 
-ALTER TABLE "limitations" ADD FOREIGN KEY ("client_id") REFERENCES "clients" ("id");
+ALTER TABLE "constraints" ADD FOREIGN KEY ("customer_id") REFERENCES "customers" ("id");
 
 ALTER TABLE "optimization_waypoints" ADD FOREIGN KEY ("optimization_id") REFERENCES "optimizations" ("id");
 
-ALTER TABLE "optimizations" ADD FOREIGN KEY ("client_id") REFERENCES "clients" ("id");
+ALTER TABLE "optimizations" ADD FOREIGN KEY ("customer_id") REFERENCES "customers" ("id");
 
 ALTER TABLE "optimizations" ADD FOREIGN KEY ("selected_cloud_id") REFERENCES "providers" ("id");
+
+ALTER TABLE "optimization_vehicles" ADD FOREIGN KEY ("optimization_id") REFERENCES "optimizations" ("id");
+
+ALTER TABLE "optimization_vehicles" ADD FOREIGN KEY ("vehicle_id") REFERENCES "vehicles" ("id");
 
 ALTER TABLE "provider_communication" ADD FOREIGN KEY ("provider_id") REFERENCES "providers" ("id");
 
 ALTER TABLE "provider_constraints_and_features" ADD FOREIGN KEY ("provider_id") REFERENCES "providers" ("id");
+
+ALTER TABLE "vehicles" ADD FOREIGN KEY ("customer_id") REFERENCES "customers" ("id");
