@@ -82,7 +82,5 @@ func (s *Server) RegisterRoutes() http.Handler {
 		clients.POST("/", s.clientsController.Create)
 	}
 
-	// 
-
 	return r
 }
