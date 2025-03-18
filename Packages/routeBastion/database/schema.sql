@@ -1,4 +1,4 @@
-CREATE TYPE "limitation_kind" AS ENUM (
+CREATE TYPE "constraint_kind" AS ENUM (
   'budget',
   'availability',
   'performance',
@@ -49,7 +49,7 @@ CREATE TABLE "customers" (
 CREATE TABLE "constraints" (
   "id" uuid PRIMARY KEY NOT NULL DEFAULT (uuid_generate_v4()),
   "customer_id" uuid NOT NULL,
-  "kind" limitation_kind NOT NULL,
+  "kind" constraint_kind NOT NULL,
   "value" jsonb NOT NULL,
   "created_at" timestamp NOT NULL DEFAULT (now()),
   "modified_at" timestamp DEFAULT null,
@@ -69,7 +69,7 @@ CREATE TABLE "optimizations" (
   "selected_cloud_id" uuid NOT NULL,
   "status" optimization_status NOT NULL,
   "kind" request_kind NOT NULL,
-  "cost" money NOT NULL,
+  "cost" numeric(10,2) NOT NULL,
   "started_at" timestamp DEFAULT null,
   "ended_at" timestamp DEFAULT null,
   "created_at" timestamp NOT NULL DEFAULT (now()),
@@ -118,7 +118,7 @@ CREATE TABLE "vehicles" (
   "deleted_at" timestamp DEFAULT null
 );
 
-CREATE INDEX "idx_limitations_customer_id" ON "constraints" ("customer_id");
+CREATE INDEX "idx_constraints_customer_id" ON "constraints" ("customer_id");
 
 CREATE INDEX "idx_optimization_id" ON "optimization_waypoints" ("optimization_id");
 
@@ -133,6 +133,12 @@ CREATE INDEX "idx_optimization_vehicle_vehicle_id" ON "optimization_vehicles" ("
 CREATE INDEX "idx_provider_communication_provider_id" ON "provider_communication" ("provider_id");
 
 CREATE INDEX "idx_provider_constraints_and_features_provider_id" ON "provider_constraints_and_features" ("provider_id");
+
+CREATE INDEX "idx_constraints_active" ON "constraints" ("customer_id") WHERE deleted_at IS NULL;
+
+CREATE INDEX "idx_providers_active" ON "providers" ("id") WHERE deleted_at IS NULL;
+
+CREATE INDEX "idx_optimizations_active" ON "optimizations" ("customer_id") WHERE deleted_at IS NULL;
 
 ALTER TABLE "constraints" ADD FOREIGN KEY ("customer_id") REFERENCES "customers" ("id");
 

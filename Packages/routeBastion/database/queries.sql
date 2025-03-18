@@ -1,58 +1,61 @@
--- name: CreateClient :one
-INSERT INTO clients (
-  id, name, api_key
+-- name: CreateCustomer :one
+INSERT INTO customers (
+  id, name, business_identifier, api_key
 ) VALUES (
-  $1, $2, $3
+  $1, $2, $3, $4
 ) RETURNING *;
 
--- name: GetClientByApiKey :one
-SELECT c.id,
+-- name: GetCustomerByApiKey :one
+SELECT
+  c.id,
   c.name,
+  c.business_identifier,
   c.api_key,
   c.created_at,
   c.modified_at,
   c.deleted_at
-FROM clients AS c
+FROM customers AS c
 WHERE c.api_key = $1 LIMIT 1;
 
--- name: DisableClient :exec
-UPDATE clients
+-- name: DisableCustomer :exec
+UPDATE customers
   SET deleted_at = $2
-WHERE clients.id = $1;
+WHERE customers.id = $1;
 
--- name: InsertLimitation :one
-INSERT INTO limitations (
-  client_id, kind, value
+-- name: InsertConstraint :one
+INSERT INTO constraints (
+  customer_id, kind, value
 ) VALUES (
   $1, $2, $3
 ) RETURNING *;
 
--- name: GetLimitationsByClientID :many
-SELECT l.id,
-  l.client_id,
-  l.kind,
-  l.value,
-  l.created_at,
-  l.modified_at,
-  l.deleted_at
-FROM limitations AS l
-WHERE l.client_id = $1 AND l.deleted_at IS NULL;
+-- name: GetConstraintsByCustomerID :many
+SELECT
+  c.id,
+  c.customer_id,
+  c.kind,
+  c.value,
+  c.created_at,
+  c.modified_at,
+  c.deleted_at
+FROM constraints AS c
+WHERE (c.customer_id, c.deleted_at) = ($1, NULL);
 
--- name: UpdateLimitationKindAndValue :exec
-UPDATE limitations
+-- name: UpdateConstraintKindAndValue :exec
+UPDATE constraints
   SET kind = $2,
     value = $3
-WHERE limitations.id = $1;
+WHERE constraints.id = $1;
 
--- name: UpdateLimitationValue :exec
-UPDATE limitations
+-- name: UpdateConstraintValue :exec
+UPDATE constraints
   SET value = $2
-WHERE limitations.id = $1;
+WHERE constraints.id = $1;
 
--- name: DeleteLimitation :exec
-UPDATE limitations
+-- name: DeleteConstraint :exec
+UPDATE constraints
   SET deleted_at = $2
-WHERE limitations.id = $1;
+WHERE constraints.id = $1;
 
 -- Name: CreateProvider :one
 INSERT INTO providers (
@@ -82,11 +85,24 @@ FROM providers
 WHERE providers.deleted_at IS NULL
 ORDER BY providers.name ASC;
 
+-- name: GetActiveOptimizationsByCustomerID :many
+SELECT
+  sqlc.embed(optimizations),
+  sqlc.embed(optimization_waypoints),
+  sqlc.embed(optimization_vehicles)
+FROM optimizations
+  INNER JOIN optimization_waypoints ON optimizations.id = optimization_waypoints.optimization_id
+  INNER JOIN optimization_vehicles ON optimizations.id = optimization_vehicles.optimization_id
+WHERE (optimizations.customer_id, optimizations.ended_at) = ($1, NULL)
+ORDER BY optimizations.created_at DESC;
+
 -- name: GetOptimizationHistoryByCustomerID :many
 SELECT
   sqlc.embed(optimizations),
-  sqlc.embed(optimization_waypoints)
+  sqlc.embed(optimization_waypoints),
+  sqlc.embed(optimization_vehicles)
 FROM optimizations
-  JOIN optimization_waypoints ON optimizations.id = optimization_waypoints.optimization_id
-WHERE optimizations.client_id = $1
+  INNER JOIN optimization_waypoints ON optimizations.id = optimization_waypoints.optimization_id
+  INNER JOIN optimization_vehicles ON optimizations.id = optimization_vehicles.optimization_id
+WHERE optimizations.customer_id = $1
 ORDER BY optimizations.created_at DESC;

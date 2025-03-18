@@ -17,7 +17,10 @@ DROP INDEX IF EXISTS "idx_optimization_vehicle_optimization_id";
 DROP INDEX IF EXISTS "idx_optimizations_selected_cloud_id";
 DROP INDEX IF EXISTS "idx_optimizations_customer_id";
 DROP INDEX IF EXISTS "idx_optimization_id";
-DROP INDEX IF EXISTS "idx_limitations_customer_id";
+DROP INDEX IF EXISTS "idx_constraints_customer_id";
+DROP INDEX IF EXISTS "idx_constraints_active";
+DROP INDEX IF EXISTS "idx_providers_active";
+DROP INDEX IF EXISTS "idx_optimizations_active";
 
 -- Drop Tables
 DROP TABLE IF EXISTS "vehicles";
@@ -35,7 +38,7 @@ DROP TYPE IF EXISTS "cargo_kind";
 DROP TYPE IF EXISTS "request_kind";
 DROP TYPE IF EXISTS "communication_method";
 DROP TYPE IF EXISTS "optimization_status";
-DROP TYPE IF EXISTS "limitation_kind";
+DROP TYPE IF EXISTS "constraint_kind";
 
 -- Drop Extension
 DROP EXTENSION IF EXISTS "uuid-ossp";

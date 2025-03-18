@@ -3,7 +3,7 @@ version: "2"
 overrides:
   go:
     rename:
-      client: "ModelClient"
+      customer: "ModelCustomer"
       limitation: "ModelLimitation"
       provider: "ModelProvider"
       provider_communication: "ModelProviderCommunication"
