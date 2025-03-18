@@ -10,7 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/database"
-	clients "github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/clients/infrastructure"
+	customers "github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/customers/infrastructure"
 	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/health"
 	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/server/middlewares"
 	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/util"
@@ -22,7 +22,7 @@ type Server struct {
 	db database.Service
 
 	healthController health.HealthController
-	clientsController clients.ClientsController
+	customersController customers.CustomersController
 }
 
 func NewServer(config util.AppEnvConfig) *http.Server {
@@ -59,7 +59,7 @@ func NewServer(config util.AppEnvConfig) *http.Server {
 
 func (s *Server) RegisterControllers() {
 	s.healthController = health.NewHealthController(s.db)
-	s.clientsController = clients.NewClientsController(s.db)
+	s.customersController = customers.NewCustomersController(s.db)
 }
 
 func (s *Server) RegisterRoutes() http.Handler {
@@ -75,11 +75,11 @@ func (s *Server) RegisterRoutes() http.Handler {
 	// Health-check
 	r.GET("/health", s.healthController.Index)
 
-	// Clients
-	clients := r.Group("/clients")
+	// Customers
+	customers := r.Group("/customers")
 	{
-		clients.GET("/:apiKey", middlewares.ApiKeyRequired(s.db), s.clientsController.GetOneByApiKey)
-		clients.POST("/", s.clientsController.Create)
+		customers.GET("/:apiKey", middlewares.ApiKeyRequired(s.db), s.customersController.GetOneByApiKey)
+		customers.POST("/", s.customersController.Create)
 	}
 
 	return r

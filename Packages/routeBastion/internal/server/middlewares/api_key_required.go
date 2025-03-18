@@ -29,7 +29,7 @@ func ApiKeyRequired(
 
 		queries := database.New(db.GetConn())
 
-		_, err := queries.GetClientByApiKey(context.Background(), apiKey)
+		_, err := queries.GetCustomerByApiKey(context.Background(), apiKey)
 
 		if err != nil {
 			ctx.AbortWithStatusJSON(

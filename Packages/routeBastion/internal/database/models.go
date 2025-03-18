@@ -12,6 +12,55 @@ import (
 	go_uuid "github.com/satori/go.uuid"
 )
 
+type CargoKind string
+
+const (
+	CargoKindBulkCargo                      CargoKind = "bulk_cargo"
+	CargoKindContainerizedCargo             CargoKind = "containerized_cargo"
+	CargoKindRefrigeratedCargo              CargoKind = "refrigerated_cargo"
+	CargoKindDryCargo                       CargoKind = "dry_cargo"
+	CargoKindAliveCargo                     CargoKind = "alive_cargo"
+	CargoKindDangerousCargo                 CargoKind = "dangerous_cargo"
+	CargoKindFragileCargo                   CargoKind = "fragile_cargo"
+	CargoKindIndivisibleAndExceptionalCargo CargoKind = "indivisible_and_exceptional_cargo"
+	CargoKindVehicleCargo                   CargoKind = "vehicle_cargo"
+)
+
+func (e *CargoKind) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = CargoKind(s)
+	case string:
+		*e = CargoKind(s)
+	default:
+		return fmt.Errorf("unsupported scan type for CargoKind: %T", src)
+	}
+	return nil
+}
+
+type NullCargoKind struct {
+	CargoKind CargoKind
+	Valid     bool // Valid is true if CargoKind is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullCargoKind) Scan(value interface{}) error {
+	if value == nil {
+		ns.CargoKind, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.CargoKind.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullCargoKind) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.CargoKind), nil
+}
+
 type CommunicationMethod string
 
 const (
@@ -54,49 +103,49 @@ func (ns NullCommunicationMethod) Value() (driver.Value, error) {
 	return string(ns.CommunicationMethod), nil
 }
 
-type LimitationKind string
+type ConstraintKind string
 
 const (
-	LimitationKindBudget       LimitationKind = "budget"
-	LimitationKindAvailability LimitationKind = "availability"
-	LimitationKindPerformance  LimitationKind = "performance"
-	LimitationKindSecurity     LimitationKind = "security"
-	LimitationKindFeature      LimitationKind = "feature"
+	ConstraintKindBudget       ConstraintKind = "budget"
+	ConstraintKindAvailability ConstraintKind = "availability"
+	ConstraintKindPerformance  ConstraintKind = "performance"
+	ConstraintKindSecurity     ConstraintKind = "security"
+	ConstraintKindFeature      ConstraintKind = "feature"
 )
 
-func (e *LimitationKind) Scan(src interface{}) error {
+func (e *ConstraintKind) Scan(src interface{}) error {
 	switch s := src.(type) {
 	case []byte:
-		*e = LimitationKind(s)
+		*e = ConstraintKind(s)
 	case string:
-		*e = LimitationKind(s)
+		*e = ConstraintKind(s)
 	default:
-		return fmt.Errorf("unsupported scan type for LimitationKind: %T", src)
+		return fmt.Errorf("unsupported scan type for ConstraintKind: %T", src)
 	}
 	return nil
 }
 
-type NullLimitationKind struct {
-	LimitationKind LimitationKind
-	Valid          bool // Valid is true if LimitationKind is not NULL
+type NullConstraintKind struct {
+	ConstraintKind ConstraintKind
+	Valid          bool // Valid is true if ConstraintKind is not NULL
 }
 
 // Scan implements the Scanner interface.
-func (ns *NullLimitationKind) Scan(value interface{}) error {
+func (ns *NullConstraintKind) Scan(value interface{}) error {
 	if value == nil {
-		ns.LimitationKind, ns.Valid = "", false
+		ns.ConstraintKind, ns.Valid = "", false
 		return nil
 	}
 	ns.Valid = true
-	return ns.LimitationKind.Scan(value)
+	return ns.ConstraintKind.Scan(value)
 }
 
 // Value implements the driver Valuer interface.
-func (ns NullLimitationKind) Value() (driver.Value, error) {
+func (ns NullConstraintKind) Value() (driver.Value, error) {
 	if !ns.Valid {
 		return nil, nil
 	}
-	return string(ns.LimitationKind), nil
+	return string(ns.ConstraintKind), nil
 }
 
 type OptimizationStatus string
@@ -186,31 +235,33 @@ func (ns NullRequestKind) Value() (driver.Value, error) {
 	return string(ns.RequestKind), nil
 }
 
-type ModelClient struct {
+type Constraint struct {
 	ID         go_uuid.UUID
-	Name       string
-	ApiKey     string
-	CreatedAt  pgtype.Timestamp
-	ModifiedAt pgtype.Timestamp
-	DeletedAt  pgtype.Timestamp
-}
-
-type ModelLimitation struct {
-	ID         go_uuid.UUID
-	ClientID   go_uuid.UUID
-	Kind       LimitationKind
+	CustomerID go_uuid.UUID
+	Kind       ConstraintKind
 	Value      []byte
 	CreatedAt  pgtype.Timestamp
 	ModifiedAt pgtype.Timestamp
 	DeletedAt  pgtype.Timestamp
 }
 
+type ModelCustomer struct {
+	ID                 go_uuid.UUID
+	Name               string
+	BusinessIdentifier string
+	ApiKey             string
+	CreatedAt          pgtype.Timestamp
+	ModifiedAt         pgtype.Timestamp
+	DeletedAt          pgtype.Timestamp
+}
+
 type ModelOptimization struct {
 	ID              go_uuid.UUID
-	ClientID        go_uuid.UUID
+	CustomerID      go_uuid.UUID
 	SelectedCloudID go_uuid.UUID
 	Status          OptimizationStatus
 	Kind            RequestKind
+	Cost            pgtype.Numeric
 	StartedAt       pgtype.Timestamp
 	EndedAt         pgtype.Timestamp
 	CreatedAt       pgtype.Timestamp
@@ -247,4 +298,20 @@ type ModelProviderConstraintsAndFeatures struct {
 	ProviderID                 go_uuid.UUID
 	MaxWaypoints               int32
 	SupportsAsyncBatchRequests bool
+}
+
+type OptimizationVehicle struct {
+	OptimizationID go_uuid.UUID
+	VehicleID      go_uuid.UUID
+}
+
+type Vehicle struct {
+	ID         go_uuid.UUID
+	Plate      string
+	Capacity   float64
+	CargoType  CargoKind
+	CustomerID go_uuid.UUID
+	CreatedAt  pgtype.Timestamp
+	ModifiedAt pgtype.Timestamp
+	DeletedAt  pgtype.Timestamp
 }

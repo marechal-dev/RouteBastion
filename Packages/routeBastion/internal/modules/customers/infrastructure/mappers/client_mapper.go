@@ -4,10 +4,10 @@ import (
 	"time"
 
 	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/database"
-	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/clients/domain/entities"
+	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/customers/domain/entities"
 )
 
-func ToDomain(model *database.ModelClient) *entities.Client {
+func ToDomain(model *database.ModelCustomer) *entities.Customer {
 	var modifiedAt *time.Time = nil
 	var deletedAt *time.Time = nil
 
@@ -19,10 +19,11 @@ func ToDomain(model *database.ModelClient) *entities.Client {
 		deletedAt = &model.DeletedAt.Time
 	}
 
-	return entities.NewClientFull(
+	return entities.NewCustomerFull(
 		model.ID,
 		model.Name,
 		model.ApiKey,
+		model.BusinessIdentifier,
 		&model.CreatedAt.Time,
 		modifiedAt,
 		deletedAt,

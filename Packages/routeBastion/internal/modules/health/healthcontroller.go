@@ -22,5 +22,7 @@ func NewHealthController(db database.Service) HealthController {
 }
 
 func (h *healthController) Index(c *gin.Context) {
-	c.JSON(http.StatusOK, h.db.Health())
+	c.JSON(http.StatusOK, gin.H{
+		"db": h.db.Health(),
+	})
 }

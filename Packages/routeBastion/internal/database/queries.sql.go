@@ -12,26 +12,33 @@ import (
 	go_uuid "github.com/satori/go.uuid"
 )
 
-const createClient = `-- name: CreateClient :one
-INSERT INTO clients (
-  id, name, api_key
+const createCustomer = `-- name: CreateCustomer :one
+INSERT INTO customers (
+  id, name, business_identifier, api_key
 ) VALUES (
-  $1, $2, $3
-) RETURNING id, name, api_key, created_at, modified_at, deleted_at
+  $1, $2, $3, $4
+) RETURNING id, name, business_identifier, api_key, created_at, modified_at, deleted_at
 `
 
-type CreateClientParams struct {
-	ID     go_uuid.UUID
-	Name   string
-	ApiKey string
+type CreateCustomerParams struct {
+	ID                 go_uuid.UUID
+	Name               string
+	BusinessIdentifier string
+	ApiKey             string
 }
 
-func (q *Queries) CreateClient(ctx context.Context, arg CreateClientParams) (ModelClient, error) {
-	row := q.db.QueryRow(ctx, createClient, arg.ID, arg.Name, arg.ApiKey)
-	var i ModelClient
+func (q *Queries) CreateCustomer(ctx context.Context, arg CreateCustomerParams) (ModelCustomer, error) {
+	row := q.db.QueryRow(ctx, createCustomer,
+		arg.ID,
+		arg.Name,
+		arg.BusinessIdentifier,
+		arg.ApiKey,
+	)
+	var i ModelCustomer
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
+		&i.BusinessIdentifier,
 		&i.ApiKey,
 		&i.CreatedAt,
 		&i.ModifiedAt,
@@ -40,36 +47,91 @@ func (q *Queries) CreateClient(ctx context.Context, arg CreateClientParams) (Mod
 	return i, err
 }
 
-const deleteLimitation = `-- name: DeleteLimitation :exec
-UPDATE limitations
+const deleteConstraint = `-- name: DeleteConstraint :exec
+UPDATE constraints
   SET deleted_at = $2
-WHERE limitations.id = $1
+WHERE constraints.id = $1
 `
 
-type DeleteLimitationParams struct {
+type DeleteConstraintParams struct {
 	ID        go_uuid.UUID
 	DeletedAt pgtype.Timestamp
 }
 
-func (q *Queries) DeleteLimitation(ctx context.Context, arg DeleteLimitationParams) error {
-	_, err := q.db.Exec(ctx, deleteLimitation, arg.ID, arg.DeletedAt)
+func (q *Queries) DeleteConstraint(ctx context.Context, arg DeleteConstraintParams) error {
+	_, err := q.db.Exec(ctx, deleteConstraint, arg.ID, arg.DeletedAt)
 	return err
 }
 
-const disableClient = `-- name: DisableClient :exec
-UPDATE clients
+const disableCustomer = `-- name: DisableCustomer :exec
+UPDATE customers
   SET deleted_at = $2
-WHERE clients.id = $1
+WHERE customers.id = $1
 `
 
-type DisableClientParams struct {
+type DisableCustomerParams struct {
 	ID        go_uuid.UUID
 	DeletedAt pgtype.Timestamp
 }
 
-func (q *Queries) DisableClient(ctx context.Context, arg DisableClientParams) error {
-	_, err := q.db.Exec(ctx, disableClient, arg.ID, arg.DeletedAt)
+func (q *Queries) DisableCustomer(ctx context.Context, arg DisableCustomerParams) error {
+	_, err := q.db.Exec(ctx, disableCustomer, arg.ID, arg.DeletedAt)
 	return err
+}
+
+const getActiveOptimizationsByCustomerID = `-- name: GetActiveOptimizationsByCustomerID :many
+SELECT
+  optimizations.id, optimizations.customer_id, optimizations.selected_cloud_id, optimizations.status, optimizations.kind, optimizations.cost, optimizations.started_at, optimizations.ended_at, optimizations.created_at, optimizations.modified_at,
+  optimization_waypoints.id, optimization_waypoints.optimization_id, optimization_waypoints.latitude, optimization_waypoints.longitude,
+  optimization_vehicles.optimization_id, optimization_vehicles.vehicle_id
+FROM optimizations
+  INNER JOIN optimization_waypoints ON optimizations.id = optimization_waypoints.optimization_id
+  INNER JOIN optimization_vehicles ON optimizations.id = optimization_vehicles.optimization_id
+WHERE (optimizations.customer_id, optimizations.ended_at) = ($1, NULL)
+ORDER BY optimizations.created_at DESC
+`
+
+type GetActiveOptimizationsByCustomerIDRow struct {
+	ModelOptimization         ModelOptimization
+	ModelOptimizationWaypoint ModelOptimizationWaypoint
+	OptimizationVehicle       OptimizationVehicle
+}
+
+func (q *Queries) GetActiveOptimizationsByCustomerID(ctx context.Context, customerID go_uuid.UUID) ([]GetActiveOptimizationsByCustomerIDRow, error) {
+	rows, err := q.db.Query(ctx, getActiveOptimizationsByCustomerID, customerID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetActiveOptimizationsByCustomerIDRow
+	for rows.Next() {
+		var i GetActiveOptimizationsByCustomerIDRow
+		if err := rows.Scan(
+			&i.ModelOptimization.ID,
+			&i.ModelOptimization.CustomerID,
+			&i.ModelOptimization.SelectedCloudID,
+			&i.ModelOptimization.Status,
+			&i.ModelOptimization.Kind,
+			&i.ModelOptimization.Cost,
+			&i.ModelOptimization.StartedAt,
+			&i.ModelOptimization.EndedAt,
+			&i.ModelOptimization.CreatedAt,
+			&i.ModelOptimization.ModifiedAt,
+			&i.ModelOptimizationWaypoint.ID,
+			&i.ModelOptimizationWaypoint.OptimizationID,
+			&i.ModelOptimizationWaypoint.Latitude,
+			&i.ModelOptimizationWaypoint.Longitude,
+			&i.OptimizationVehicle.OptimizationID,
+			&i.OptimizationVehicle.VehicleID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getAvailableProviders = `-- name: GetAvailableProviders :many
@@ -127,55 +189,31 @@ func (q *Queries) GetAvailableProviders(ctx context.Context) ([]GetAvailableProv
 	return items, nil
 }
 
-const getClientByApiKey = `-- name: GetClientByApiKey :one
-SELECT c.id,
-  c.name,
-  c.api_key,
+const getConstraintsByCustomerID = `-- name: GetConstraintsByCustomerID :many
+SELECT
+  c.id,
+  c.customer_id,
+  c.kind,
+  c.value,
   c.created_at,
   c.modified_at,
   c.deleted_at
-FROM clients AS c
-WHERE c.api_key = $1 LIMIT 1
+FROM constraints AS c
+WHERE (c.customer_id, c.deleted_at) = ($1, NULL)
 `
 
-func (q *Queries) GetClientByApiKey(ctx context.Context, apiKey string) (ModelClient, error) {
-	row := q.db.QueryRow(ctx, getClientByApiKey, apiKey)
-	var i ModelClient
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.ApiKey,
-		&i.CreatedAt,
-		&i.ModifiedAt,
-		&i.DeletedAt,
-	)
-	return i, err
-}
-
-const getLimitationsByClientID = `-- name: GetLimitationsByClientID :many
-SELECT l.id,
-  l.client_id,
-  l.kind,
-  l.value,
-  l.created_at,
-  l.modified_at,
-  l.deleted_at
-FROM limitations AS l
-WHERE l.client_id = $1 AND l.deleted_at IS NULL
-`
-
-func (q *Queries) GetLimitationsByClientID(ctx context.Context, clientID go_uuid.UUID) ([]ModelLimitation, error) {
-	rows, err := q.db.Query(ctx, getLimitationsByClientID, clientID)
+func (q *Queries) GetConstraintsByCustomerID(ctx context.Context, customerID go_uuid.UUID) ([]Constraint, error) {
+	rows, err := q.db.Query(ctx, getConstraintsByCustomerID, customerID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ModelLimitation
+	var items []Constraint
 	for rows.Next() {
-		var i ModelLimitation
+		var i Constraint
 		if err := rows.Scan(
 			&i.ID,
-			&i.ClientID,
+			&i.CustomerID,
 			&i.Kind,
 			&i.Value,
 			&i.CreatedAt,
@@ -192,23 +230,54 @@ func (q *Queries) GetLimitationsByClientID(ctx context.Context, clientID go_uuid
 	return items, nil
 }
 
+const getCustomerByApiKey = `-- name: GetCustomerByApiKey :one
+SELECT
+  c.id,
+  c.name,
+  c.business_identifier,
+  c.api_key,
+  c.created_at,
+  c.modified_at,
+  c.deleted_at
+FROM customers AS c
+WHERE c.api_key = $1 LIMIT 1
+`
+
+func (q *Queries) GetCustomerByApiKey(ctx context.Context, apiKey string) (ModelCustomer, error) {
+	row := q.db.QueryRow(ctx, getCustomerByApiKey, apiKey)
+	var i ModelCustomer
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.BusinessIdentifier,
+		&i.ApiKey,
+		&i.CreatedAt,
+		&i.ModifiedAt,
+		&i.DeletedAt,
+	)
+	return i, err
+}
+
 const getOptimizationHistoryByCustomerID = `-- name: GetOptimizationHistoryByCustomerID :many
 SELECT
-  optimizations.id, optimizations.client_id, optimizations.selected_cloud_id, optimizations.status, optimizations.kind, optimizations.started_at, optimizations.ended_at, optimizations.created_at, optimizations.modified_at,
-  optimization_waypoints.id, optimization_waypoints.optimization_id, optimization_waypoints.latitude, optimization_waypoints.longitude
+  optimizations.id, optimizations.customer_id, optimizations.selected_cloud_id, optimizations.status, optimizations.kind, optimizations.cost, optimizations.started_at, optimizations.ended_at, optimizations.created_at, optimizations.modified_at,
+  optimization_waypoints.id, optimization_waypoints.optimization_id, optimization_waypoints.latitude, optimization_waypoints.longitude,
+  optimization_vehicles.optimization_id, optimization_vehicles.vehicle_id
 FROM optimizations
-  JOIN optimization_waypoints ON optimizations.id = optimization_waypoints.optimization_id
-WHERE optimizations.client_id = $1
+  INNER JOIN optimization_waypoints ON optimizations.id = optimization_waypoints.optimization_id
+  INNER JOIN optimization_vehicles ON optimizations.id = optimization_vehicles.optimization_id
+WHERE optimizations.customer_id = $1
 ORDER BY optimizations.created_at DESC
 `
 
 type GetOptimizationHistoryByCustomerIDRow struct {
 	ModelOptimization         ModelOptimization
 	ModelOptimizationWaypoint ModelOptimizationWaypoint
+	OptimizationVehicle       OptimizationVehicle
 }
 
-func (q *Queries) GetOptimizationHistoryByCustomerID(ctx context.Context, clientID go_uuid.UUID) ([]GetOptimizationHistoryByCustomerIDRow, error) {
-	rows, err := q.db.Query(ctx, getOptimizationHistoryByCustomerID, clientID)
+func (q *Queries) GetOptimizationHistoryByCustomerID(ctx context.Context, customerID go_uuid.UUID) ([]GetOptimizationHistoryByCustomerIDRow, error) {
+	rows, err := q.db.Query(ctx, getOptimizationHistoryByCustomerID, customerID)
 	if err != nil {
 		return nil, err
 	}
@@ -218,10 +287,11 @@ func (q *Queries) GetOptimizationHistoryByCustomerID(ctx context.Context, client
 		var i GetOptimizationHistoryByCustomerIDRow
 		if err := rows.Scan(
 			&i.ModelOptimization.ID,
-			&i.ModelOptimization.ClientID,
+			&i.ModelOptimization.CustomerID,
 			&i.ModelOptimization.SelectedCloudID,
 			&i.ModelOptimization.Status,
 			&i.ModelOptimization.Kind,
+			&i.ModelOptimization.Cost,
 			&i.ModelOptimization.StartedAt,
 			&i.ModelOptimization.EndedAt,
 			&i.ModelOptimization.CreatedAt,
@@ -230,6 +300,8 @@ func (q *Queries) GetOptimizationHistoryByCustomerID(ctx context.Context, client
 			&i.ModelOptimizationWaypoint.OptimizationID,
 			&i.ModelOptimizationWaypoint.Latitude,
 			&i.ModelOptimizationWaypoint.Longitude,
+			&i.OptimizationVehicle.OptimizationID,
+			&i.OptimizationVehicle.VehicleID,
 		); err != nil {
 			return nil, err
 		}
@@ -282,26 +354,26 @@ func (q *Queries) GetProviderDetailsByID(ctx context.Context, id go_uuid.UUID) (
 	return i, err
 }
 
-const insertLimitation = `-- name: InsertLimitation :one
-INSERT INTO limitations (
-  client_id, kind, value
+const insertConstraint = `-- name: InsertConstraint :one
+INSERT INTO constraints (
+  customer_id, kind, value
 ) VALUES (
   $1, $2, $3
-) RETURNING id, client_id, kind, value, created_at, modified_at, deleted_at
+) RETURNING id, customer_id, kind, value, created_at, modified_at, deleted_at
 `
 
-type InsertLimitationParams struct {
-	ClientID go_uuid.UUID
-	Kind     LimitationKind
-	Value    []byte
+type InsertConstraintParams struct {
+	CustomerID go_uuid.UUID
+	Kind       ConstraintKind
+	Value      []byte
 }
 
-func (q *Queries) InsertLimitation(ctx context.Context, arg InsertLimitationParams) (ModelLimitation, error) {
-	row := q.db.QueryRow(ctx, insertLimitation, arg.ClientID, arg.Kind, arg.Value)
-	var i ModelLimitation
+func (q *Queries) InsertConstraint(ctx context.Context, arg InsertConstraintParams) (Constraint, error) {
+	row := q.db.QueryRow(ctx, insertConstraint, arg.CustomerID, arg.Kind, arg.Value)
+	var i Constraint
 	err := row.Scan(
 		&i.ID,
-		&i.ClientID,
+		&i.CustomerID,
 		&i.Kind,
 		&i.Value,
 		&i.CreatedAt,
@@ -311,36 +383,36 @@ func (q *Queries) InsertLimitation(ctx context.Context, arg InsertLimitationPara
 	return i, err
 }
 
-const updateLimitationKindAndValue = `-- name: UpdateLimitationKindAndValue :exec
-UPDATE limitations
+const updateConstraintKindAndValue = `-- name: UpdateConstraintKindAndValue :exec
+UPDATE constraints
   SET kind = $2,
     value = $3
-WHERE limitations.id = $1
+WHERE constraints.id = $1
 `
 
-type UpdateLimitationKindAndValueParams struct {
+type UpdateConstraintKindAndValueParams struct {
 	ID    go_uuid.UUID
-	Kind  LimitationKind
+	Kind  ConstraintKind
 	Value []byte
 }
 
-func (q *Queries) UpdateLimitationKindAndValue(ctx context.Context, arg UpdateLimitationKindAndValueParams) error {
-	_, err := q.db.Exec(ctx, updateLimitationKindAndValue, arg.ID, arg.Kind, arg.Value)
+func (q *Queries) UpdateConstraintKindAndValue(ctx context.Context, arg UpdateConstraintKindAndValueParams) error {
+	_, err := q.db.Exec(ctx, updateConstraintKindAndValue, arg.ID, arg.Kind, arg.Value)
 	return err
 }
 
-const updateLimitationValue = `-- name: UpdateLimitationValue :exec
-UPDATE limitations
+const updateConstraintValue = `-- name: UpdateConstraintValue :exec
+UPDATE constraints
   SET value = $2
-WHERE limitations.id = $1
+WHERE constraints.id = $1
 `
 
-type UpdateLimitationValueParams struct {
+type UpdateConstraintValueParams struct {
 	ID    go_uuid.UUID
 	Value []byte
 }
 
-func (q *Queries) UpdateLimitationValue(ctx context.Context, arg UpdateLimitationValueParams) error {
-	_, err := q.db.Exec(ctx, updateLimitationValue, arg.ID, arg.Value)
+func (q *Queries) UpdateConstraintValue(ctx context.Context, arg UpdateConstraintValueParams) error {
+	_, err := q.db.Exec(ctx, updateConstraintValue, arg.ID, arg.Value)
 	return err
 }
