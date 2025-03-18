@@ -9,10 +9,20 @@ import (
 	"go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
+	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
 )
 
 func InitTracer() (*trace.TracerProvider, error) {
 	ctx := context.Background()
+
+	res, err := resource.New(ctx,
+		resource.WithAttributes(
+				semconv.ServiceNameKey.String("RouteBastion-Broker-Tracing"),
+		),
+	)
+	if err != nil {
+			return nil, err
+	}
 
 	// Configure the OTLP trace exporter
 	exp, err := otlptracegrpc.New(ctx,
@@ -26,7 +36,7 @@ func InitTracer() (*trace.TracerProvider, error) {
 	// Create the TracerProvider with the exporter
 	tp := trace.NewTracerProvider(
 			trace.WithBatcher(exp),
-			trace.WithResource(resource.Default()),
+			trace.WithResource(res),
 	)
 
 	// Set the global TracerProvider
@@ -37,6 +47,15 @@ func InitTracer() (*trace.TracerProvider, error) {
 
 func InitMeter() (*metric.MeterProvider, error) {
 	ctx := context.Background()
+
+	res, err := resource.New(ctx,
+		resource.WithAttributes(
+				semconv.ServiceNameKey.String("RouteBastion-Broker-Measuring"),
+		),
+	)
+	if err != nil {
+			return nil, err
+	}
 
 	// Configure the OTLP metric exporter
 	exp, err := otlpmetricgrpc.New(ctx,
@@ -50,7 +69,7 @@ func InitMeter() (*metric.MeterProvider, error) {
 	// Create the MeterProvider with the exporter
 	mp := metric.NewMeterProvider(
 			metric.WithReader(metric.NewPeriodicReader(exp)),
-			metric.WithResource(resource.Default()),
+			metric.WithResource(res),
 	)
 
 	// Set the global MeterProvider

@@ -54,6 +54,9 @@ func NewServer(config util.AppEnvConfig) *http.Server {
 		WriteTimeout: 30 * time.Second,
 	}
 
+	util.InitTracer()
+	util.InitMeter()
+
 	return server
 }
 

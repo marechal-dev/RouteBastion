@@ -24,6 +24,11 @@ processors:
   batch: {}
 
 exporters:
+  otlp/jaeger:
+    endpoint: jaeger:4317
+    tls:
+      insecure: true
+
   prometheus:
     endpoint: "0.0.0.0:8889"
 
