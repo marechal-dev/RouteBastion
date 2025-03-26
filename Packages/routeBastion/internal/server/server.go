@@ -8,6 +8,7 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 
 	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/database"
 	customers "github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/customers/infrastructure"
@@ -39,7 +40,6 @@ func NewServer(config util.AppEnvConfig) *http.Server {
 
 	newServer := &Server{
 		port: port,
-
 		db: dbService,
 	}
 
@@ -67,6 +67,8 @@ func (s *Server) RegisterControllers() {
 
 func (s *Server) RegisterRoutes() http.Handler {
 	r := gin.Default()
+
+	r.Use(otelgin.Middleware("RouteBastion-Broker-HTTP"))
 
 	r.Use(cors.New(cors.Config{
 		AllowAllOrigins: true,

@@ -43,26 +43,26 @@ func main() {
 		log.Fatalf("could not load config: %v", err)
 	}
 
-	// tp, err := util.InitTracer()
-	// if err != nil {
-	// 	log.Fatalf("failed to initialize tracer: %v", err)
-	// }
+	tp, err := util.InitTracer()
+	if err != nil {
+		log.Fatalf("failed to initialize tracer: %v", err)
+	}
 
-	// defer func() {
-	// 	if err := tp.Shutdown(context.Background()); err != nil {
-	// 		log.Fatalf("failed to shut down tracer provider: %v", err)
-	// 	}
-	// }()
+	defer func() {
+		if err := tp.Shutdown(context.Background()); err != nil {
+			log.Fatalf("failed to shut down tracer provider: %v", err)
+		}
+	}()
 
-	// mp, err := util.InitMeter()
-	// if err != nil {
-	// 		log.Fatalf("failed to initialize meter: %v", err)
-	// }
-	// defer func() {
-	// 		if err := mp.Shutdown(context.Background()); err != nil {
-	// 				log.Fatalf("failed to shut down meter provider: %v", err)
-	// 		}
-	// }()
+	mp, err := util.InitMeter()
+	if err != nil {
+			log.Fatalf("failed to initialize meter: %v", err)
+	}
+	defer func() {
+			if err := mp.Shutdown(context.Background()); err != nil {
+					log.Fatalf("failed to shut down meter provider: %v", err)
+			}
+	}()
 
 	server := server.NewServer(config)
 

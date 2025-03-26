@@ -2,6 +2,7 @@ package util
 
 import (
 	"context"
+	"fmt"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
@@ -17,29 +18,27 @@ func InitTracer() (*trace.TracerProvider, error) {
 
 	res, err := resource.New(ctx,
 		resource.WithAttributes(
-				semconv.ServiceNameKey.String("RouteBastion-Broker-Tracing"),
+			semconv.ServiceNameKey.String("RouteBastion-Broker-Tracing"),
 		),
 	)
 	if err != nil {
-			return nil, err
+		return nil, fmt.Errorf("failed to create resource: %w", err)
 	}
 
-	// Configure the OTLP trace exporter
 	exp, err := otlptracegrpc.New(ctx,
-			otlptracegrpc.WithInsecure(),
-			otlptracegrpc.WithEndpoint("otel-collector:4317"),
+		otlptracegrpc.WithInsecure(),
+		otlptracegrpc.WithEndpoint("otel-collector:4317"),
 	)
 	if err != nil {
-			return nil, err
+		return nil, fmt.Errorf("failed to create trace exporter: %w", err)
 	}
 
-	// Create the TracerProvider with the exporter
 	tp := trace.NewTracerProvider(
-			trace.WithBatcher(exp),
-			trace.WithResource(res),
+		trace.WithSampler(trace.AlwaysSample()),
+		trace.WithBatcher(exp),
+		trace.WithResource(res),
 	)
 
-	// Set the global TracerProvider
 	otel.SetTracerProvider(tp)
 
 	return tp, nil

@@ -10,6 +10,12 @@ volumes:
   prometheus_data:
     driver: local
 
+networks:
+  default:
+    driver: bridge
+  metrics:
+    driver: bridge
+
 services:
   api-dev:
     container_name: 'api-dev'
@@ -18,12 +24,19 @@ services:
       dockerfile: build/app.dev.Dockerfile
     ports:
       - 8080:8080
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+      - OTEL_EXPORTER_JAEGER_ENDPOINT=http://jaeger:14268/api/traces
+      - OTEL_EXPORTER_PROMETHEUS_PORT=9090
     depends_on:
       database:
         condition: service_healthy
       cache:
         condition: service_started
         required: true
+    networks:
+      - default
+      - metrics
     volumes:
       - ../:/app
 
@@ -43,6 +56,9 @@ services:
       timeout: 5s
       retries: 3
       start_period: 15s
+    networks:
+      - default
+      - metrics
     volumes:
       - 'db_data:/bitnami/postgresql'
 
@@ -51,40 +67,17 @@ services:
     container_name: 'redis-cache'
     ports:
       - 6379:6379
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
     volumes:
       - 'cache_data:/data'
-
-  jaeger:
-    image: jaegertracing/jaeger:2.4.0
-    container_name: 'jaeger'
-    ports:
-      - "16686:16686"  # Jaeger UI
-      - "4317:4317"    # OTLP gRPC
-      - "4318:4318"    # OTLP HTTP
-    environment:
-      COLLECTOR_OTLP_ENABLED: "true"
-
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: 'prometheus'
-    volumes:
-      - ./configs/prometheus.yml:/etc/prometheus.yml:ro
-      - prometheus_data:/prometheus
-    ports:
-      - 9090:9090
-
-  otel-collector:
-    image: otel/opentelemetry-collector-contrib:latest
-    container_name: 'otel-collector'
-    command: ["--config=/etc/otel-collector-config.yml"]
-    volumes:
-      - ./configs/otel-collector-config.yml:/etc/otel-collector-config.yml:ro
-    ports:
-      - 14317:4317  # gRPC5
-      - 14318:4318  # HTTP
-      - 8889:8889 # Prometheus Exporter
-    depends_on:
-      - prometheus
+    networks:
+      - default
+      - metrics
 
   grafana:
     image: grafana/grafana:latest
@@ -95,26 +88,76 @@ services:
       - 3000:3000
     depends_on:
       - prometheus
+      - jaeger
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
+    networks:
+      - metrics
 
-  # redis-exporter:
-  #   image: oliver006/redis_exporter
-  #   container_name: redis-exporter
-  #   ports:
-  #     - 9121:9121
-  #   environment:
-  #     - REDIS_ADDR=redis://cache:6379
-  #   depends_on:
-  #     - cache
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: 'prometheus'
+    volumes:
+      - ./configs/prometheus.yml:/etc/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command: ["--config.file=/etc/prometheus.yml"]
+    ports:
+      - 9090:9090
+    depends_on:
+      - otel-collector
+      - postgresql-exporter
+      - redis-exporter
+    networks:
+      - metrics
 
-  # postgres-exporter:
-  #   image: prometheuscommunity/postgres-exporter
-  #   container_name: postgres-exporter
-  #   ports:
-  #     - 9187:9187
-  #   environment:
-  #     - DATA_SOURCE_NAME=postgresql://docker:docker@database:5432/route_bastion?sslmode=disable
-  #   depends_on:
-  #     - database
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: 'jaeger'
+    ports:
+      - "6831:6831/udp"
+      - "6832:6832/udp"
+      - "5775:5775/udp"
+      - "16686:16686" # UI port
+      - "14268:14268"
+      - "9411:9411" # Zipkin endpoint
+    networks:
+      - metrics
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: 'otel-collector'
+    command: ["--config=/etc/otel-collector-config.yml"]
+    volumes:
+      - ./configs/otel-collector-config.yml:/etc/otel-collector-config.yml:ro
+    ports:
+      - "4317:4317"  # OTLP receiver for traces/metrics
+      - "8889:8889"  # Metrics endpoint (Prometheus scrape) from the collector
+    networks:
+      - metrics
+
+  postgresql-exporter:
+    image: quay.io/prometheuscommunity/postgres-exporter
+    container_name: 'postgresql-exporter'
+    environment:
+      - DATA_SOURCE_URI=database:5432/route_bastion?sslmode=disable
+      - DATA_SOURCE_USER=docker
+      - DATA_SOURCE_PASS=docker
+    ports:
+      - "9187:9187"
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - metrics
+
+  redis-exporter:
+    image: oliver006/redis_exporter
+    container_name: 'redis-exporter'
+    ports:
+      - "9121:9121"
+    command: ["--redis.addr=redis://cache:6379"]
+    depends_on:
+      - cache
+    networks:
+      - metrics
