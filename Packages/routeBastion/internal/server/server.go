@@ -8,6 +8,7 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 
 	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/database"
@@ -43,6 +44,9 @@ func NewServer(config util.AppEnvConfig) *http.Server {
 		db: dbService,
 	}
 
+	util.InitTracer()
+	util.InitMeter()
+
 	newServer.RegisterControllers()
 
 	// Declare Server config
@@ -53,9 +57,6 @@ func NewServer(config util.AppEnvConfig) *http.Server {
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 30 * time.Second,
 	}
-
-	util.InitTracer()
-	util.InitMeter()
 
 	return server
 }
@@ -79,6 +80,9 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	// Health-check
 	r.GET("/health", s.healthController.Index)
+
+	// Prometheus Metrics
+	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
 	// Customers
 	customers := r.Group("/customers")
