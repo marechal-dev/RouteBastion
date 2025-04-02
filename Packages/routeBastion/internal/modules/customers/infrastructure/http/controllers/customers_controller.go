@@ -1,4 +1,4 @@
-package infrastructure
+package controllers
 
 import (
 	"fmt"
@@ -14,10 +14,10 @@ import (
 )
 
 type CustomersController struct {
-	db database.Service
+	db database.DatabaseService
 }
 
-func NewCustomersController(db database.Service) CustomersController {
+func NewCustomersController(db database.DatabaseService) CustomersController {
 	return CustomersController{
 		db: db,
 	}

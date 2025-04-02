@@ -12,8 +12,8 @@ type PostgresqlCustomersRepository struct {
 	queries *database.Queries
 }
 
-func NewPostgreSQLCustomersRepository(db database.Service) *PostgresqlCustomersRepository {
-	queries := database.New(db.GetConn())
+func NewPostgreSQLCustomersRepository(db database.DatabaseService) *PostgresqlCustomersRepository {
+	queries := db.GetQueries()
 
 	return &PostgresqlCustomersRepository{
 		queries: queries,

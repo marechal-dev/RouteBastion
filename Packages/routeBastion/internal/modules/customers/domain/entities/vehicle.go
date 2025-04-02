@@ -1,0 +1,135 @@
+package entities
+
+import (
+	"time"
+
+	uuid "github.com/satori/go.uuid"
+)
+
+type CargoKind string
+
+const (
+	CargoKindBulkCargo                      CargoKind = "bulk_cargo"
+	CargoKindContainerizedCargo             CargoKind = "containerized_cargo"
+	CargoKindRefrigeratedCargo              CargoKind = "refrigerated_cargo"
+	CargoKindDryCargo                       CargoKind = "dry_cargo"
+	CargoKindAliveCargo                     CargoKind = "alive_cargo"
+	CargoKindDangerousCargo                 CargoKind = "dangerous_cargo"
+	CargoKindFragileCargo                   CargoKind = "fragile_cargo"
+	CargoKindIndivisibleAndExceptionalCargo CargoKind = "indivisible_and_exceptional_cargo"
+	CargoKindVehicleCargo                   CargoKind = "vehicle_cargo"
+)
+
+type Vehicle struct {
+	id uuid.UUID
+	plate string
+	capacity float64
+	cargoType CargoKind
+	customerID uuid.UUID
+	createdAt *time.Time
+	modifiedAt *time.Time
+	deletedAt *time.Time
+}
+
+func NewVehicle(
+	plate string,
+	capacity float64,
+	cargoType CargoKind,
+	customerID uuid.UUID,
+) *Vehicle {
+	return &Vehicle{
+		id: uuid.NewV4(),
+		plate: plate,
+		capacity: capacity,
+		cargoType: cargoType,
+		customerID: customerID,
+		createdAt: &time.Time{},
+		modifiedAt: nil,
+		deletedAt: nil,
+	}
+}
+
+func NewFullVehicle(
+	id uuid.UUID,
+	plate string,
+	capacity float64,
+	cargoType CargoKind,
+	customerID uuid.UUID,
+	createdAt *time.Time,
+	modifiedAt *time.Time,
+	deletedAt *time.Time,
+) *Vehicle {
+	return &Vehicle{
+		id: id,
+		plate: plate,
+		capacity: capacity,
+		cargoType: cargoType,
+		customerID: customerID,
+		createdAt: createdAt,
+		modifiedAt: modifiedAt,
+		deletedAt: deletedAt,
+	}
+}
+
+func (v *Vehicle) ID() uuid.UUID {
+	return v.id
+}
+
+func (v *Vehicle) Plate() string {
+	return v.plate
+}
+
+func (v *Vehicle) SetPlate(plate string) {
+	v.plate = plate
+	v.touch()
+}
+
+func (v *Vehicle) Capacity() float64 {
+	return v.capacity
+}
+
+func (v *Vehicle) SetCapacity(capacity float64) {
+	v.capacity = capacity
+	v.touch()
+}
+
+func (v *Vehicle) CargoType() CargoKind {
+	return v.cargoType
+}
+
+func (v *Vehicle) CustomerID() uuid.UUID {
+	return v.customerID
+}
+
+func (v *Vehicle) CreatedAt() *time.Time {
+	return v.createdAt
+}
+
+func (v *Vehicle) ModifiedAt() *time.Time {
+	return v.modifiedAt
+}
+
+func (v *Vehicle) DeletedAt() *time.Time {
+	return v.deletedAt
+}
+
+func (v *Vehicle) Disable() {
+	v.deletedAt = &time.Time{}
+	v.touch()
+}
+
+func (v *Vehicle) IsDisabled() bool {
+	if v.deletedAt == nil {
+		return false
+	}
+
+	now := &time.Time{}
+	nowUNIX := now.Unix()
+
+	return v.deletedAt.Unix() > nowUNIX
+}
+
+func (v *Vehicle) touch() {
+	v.modifiedAt = &time.Time{}
+}
+

@@ -12,16 +12,16 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 
 	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/database"
-	customers "github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/customers/infrastructure"
+	customers "github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/customers/infrastructure/http/controllers"
 	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/health"
-	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/server/middlewares"
+	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/shared/application/middlewares"
 	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/util"
 )
 
 type Server struct {
 	port int
 
-	db database.Service
+	db database.DatabaseService
 
 	healthController health.HealthController
 	customersController customers.CustomersController
@@ -87,7 +87,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	// Customers
 	customers := r.Group("/customers")
 	{
-		customers.GET("/:apiKey", middlewares.ApiKeyRequired(s.db), s.customersController.GetOneByApiKey)
+		customers.GET("/:apiKey", middlewares.ApiKeyValidatorMiddleware(s.db), s.customersController.GetOneByApiKey)
 		customers.POST("/", s.customersController.Create)
 	}
 

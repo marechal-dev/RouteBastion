@@ -1,16 +1,13 @@
 package middlewares
 
 import (
-	"context"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/database"
 )
 
-func ApiKeyRequired(
-	db database.Service,
-) gin.HandlerFunc {
+func ApiKeyValidatorMiddleware(db database.DatabaseService) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		const apiKeyHeader string = "RouteBastion-API-Key"
 
@@ -27,9 +24,9 @@ func ApiKeyRequired(
 			return
 		}
 
-		queries := database.New(db.GetConn())
+		queries := db.GetQueries()
 
-		_, err := queries.GetCustomerByApiKey(context.Background(), apiKey)
+		_, err := queries.GetCustomerByApiKey(ctx, apiKey)
 
 		if err != nil {
 			ctx.AbortWithStatusJSON(

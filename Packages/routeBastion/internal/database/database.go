@@ -13,8 +13,10 @@ import (
 )
 
 // Service represents a service that interacts with a database.
-type Service interface {
+type DatabaseService interface {
 	GetConn() *pgxpool.Pool
+
+	GetQueries() *Queries
 
 	// Health returns a map of health status information.
 	// The keys and values in the map are service-specific.
@@ -46,7 +48,7 @@ func NewDatabaseServiceImpl(
 	dbPort string,
 	dbHost string,
 	dbSchema string,
-) Service {
+) DatabaseService {
 	// Reuse Connection
 	if dbInstance != nil {
 		return dbInstance
@@ -134,6 +136,10 @@ func (s *DatabaseServiceImpl) Health() map[string]string {
 	}
 
 	return stats
+}
+
+func (s *DatabaseServiceImpl) GetQueries() *Queries {
+	return New(s.db)
 }
 
 // Close closes the database connection.

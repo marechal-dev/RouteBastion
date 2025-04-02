@@ -10,7 +10,7 @@ type CustomerPresenter struct {
 	Name string `json:"name"`
 	ApiKey string `json:"apiKey"`
 	BusinessIdentifier string `json:"businessIdentifier"`
-	CreatedAt string `json:"createdAt"`
+	CreatedAt *time.Time `json:"createdAt"`
 }
 
 func FromDomain(customer *entities.Customer) *CustomerPresenter {
@@ -18,6 +18,6 @@ func FromDomain(customer *entities.Customer) *CustomerPresenter {
 		Name: customer.Name(),
 		ApiKey: customer.ApiKey(),
 		BusinessIdentifier: customer.BusinessIdentifier(),
-		CreatedAt: customer.CreatedAt().Format(time.UnixDate),
+		CreatedAt: customer.CreatedAt(),
 	}
 }

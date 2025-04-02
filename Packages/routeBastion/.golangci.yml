@@ -1,0 +1,15 @@
+# See the dedicated "version" documentation section.
+version: "2"
+linters:
+  # See the dedicated "linters" documentation section.
+  enable:
+    - errcheck
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+formatters:
+  enable:
+    - gofmt
+    - goimports
+    - golines

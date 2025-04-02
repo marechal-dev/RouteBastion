@@ -12,10 +12,10 @@ type HealthController interface {
 }
 
 type healthController struct {
-	db database.Service
+	db database.DatabaseService
 }
 
-func NewHealthController(db database.Service) HealthController {
+func NewHealthController(db database.DatabaseService) HealthController {
 	return &healthController{
 		db: db,
 	}
