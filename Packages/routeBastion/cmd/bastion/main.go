@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/server"
-	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/util"
+	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/utils"
 )
 
 func gracefulShutdown(apiServer *http.Server, done chan bool) {
@@ -38,12 +38,12 @@ func gracefulShutdown(apiServer *http.Server, done chan bool) {
 }
 
 func main() {
-	config, err := util.LoadConfig(".")
+	config, err := utils.LoadConfig(".")
 	if err != nil {
 		log.Fatalf("could not load config: %v", err)
 	}
 
-	tp, err := util.InitTracer()
+	tp, err := utils.InitTracer()
 	if err != nil {
 		log.Fatalf("failed to initialize tracer: %v", err)
 	}
@@ -54,14 +54,14 @@ func main() {
 		}
 	}()
 
-	mp, err := util.InitMeter()
+	mp, err := utils.InitMeter()
 	if err != nil {
-			log.Fatalf("failed to initialize meter: %v", err)
+		log.Fatalf("failed to initialize meter: %v", err)
 	}
 	defer func() {
-			if err := mp.Shutdown(context.Background()); err != nil {
-					log.Fatalf("failed to shut down meter provider: %v", err)
-			}
+		if err := mp.Shutdown(context.Background()); err != nil {
+			log.Fatalf("failed to shut down meter provider: %v", err)
+		}
 	}()
 
 	server := server.NewServer(config)

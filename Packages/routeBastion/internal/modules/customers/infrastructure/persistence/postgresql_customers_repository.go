@@ -4,12 +4,13 @@ import (
 	"context"
 
 	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/database"
+	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/database/generated"
 	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/customers/domain/entities"
 	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/customers/infrastructure/mappers"
 )
 
 type PostgresqlCustomersRepository struct {
-	queries *database.Queries
+	queries *generated.Queries
 }
 
 func NewPostgreSQLCustomersRepository(db database.DatabaseService) *PostgresqlCustomersRepository {
@@ -21,10 +22,9 @@ func NewPostgreSQLCustomersRepository(db database.DatabaseService) *PostgresqlCu
 }
 
 func (r *PostgresqlCustomersRepository) Create(customer *entities.Customer) error {
-	_, err := r.queries.CreateCustomer(context.Background(), database.CreateCustomerParams{
-		ID: customer.ID(),
-		Name: customer.Name(),
-		ApiKey: customer.ApiKey(),
+	_, err := r.queries.CreateCustomer(context.Background(), generated.CreateCustomerParams{
+		ID:                 customer.ID(),
+		Name:               customer.Name(),
 		BusinessIdentifier: customer.BusinessIdentifier(),
 	})
 

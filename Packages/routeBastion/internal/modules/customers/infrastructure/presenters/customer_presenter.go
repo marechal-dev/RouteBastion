@@ -7,17 +7,15 @@ import (
 )
 
 type CustomerPresenter struct {
-	Name string `json:"name"`
-	ApiKey string `json:"apiKey"`
-	BusinessIdentifier string `json:"businessIdentifier"`
-	CreatedAt *time.Time `json:"createdAt"`
+	Name               string     `json:"name"`
+	BusinessIdentifier string     `json:"businessIdentifier"`
+	CreatedAt          *time.Time `json:"createdAt"`
 }
 
 func FromDomain(customer *entities.Customer) *CustomerPresenter {
 	return &CustomerPresenter{
-		Name: customer.Name(),
-		ApiKey: customer.ApiKey(),
+		Name:               customer.Name(),
 		BusinessIdentifier: customer.BusinessIdentifier(),
-		CreatedAt: customer.CreatedAt(),
+		CreatedAt:          customer.CreatedAt(),
 	}
 }

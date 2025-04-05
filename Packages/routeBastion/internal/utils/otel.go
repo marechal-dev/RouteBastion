@@ -1,4 +1,4 @@
-package util
+package utils
 
 import (
 	"context"
@@ -49,26 +49,26 @@ func InitMeter() (*metric.MeterProvider, error) {
 
 	res, err := resource.New(ctx,
 		resource.WithAttributes(
-				semconv.ServiceNameKey.String("RouteBastion-Broker-Measuring"),
+			semconv.ServiceNameKey.String("RouteBastion-Broker-Measuring"),
 		),
 	)
 	if err != nil {
-			return nil, err
+		return nil, err
 	}
 
 	// Configure the OTLP metric exporter
 	exp, err := otlpmetricgrpc.New(ctx,
-			otlpmetricgrpc.WithInsecure(),
-			otlpmetricgrpc.WithEndpoint("otel-collector:4317"),
+		otlpmetricgrpc.WithInsecure(),
+		otlpmetricgrpc.WithEndpoint("otel-collector:4317"),
 	)
 	if err != nil {
-			return nil, err
+		return nil, err
 	}
 
 	// Create the MeterProvider with the exporter
 	mp := metric.NewMeterProvider(
-			metric.WithReader(metric.NewPeriodicReader(exp)),
-			metric.WithResource(res),
+		metric.WithReader(metric.NewPeriodicReader(exp)),
+		metric.WithResource(res),
 	)
 
 	// Set the global MeterProvider

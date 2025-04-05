@@ -13,20 +13,22 @@ type CreateCustomerUseCase interface {
 
 type CreateCustomerUseCaseImpl struct {
 	repo repositories.CustomersRepository
-	gen cryptography.ApiKeyGenerator
+	gen  cryptography.ApiKeyGenerator
 }
 
-func NewCreateCustomerUseCase(repo repositories.CustomersRepository, gen cryptography.ApiKeyGenerator) *CreateCustomerUseCaseImpl {
+func NewCreateCustomerUseCase(
+	repo repositories.CustomersRepository,
+	gen cryptography.ApiKeyGenerator,
+) *CreateCustomerUseCaseImpl {
 	return &CreateCustomerUseCaseImpl{
 		repo: repo,
-		gen: gen,
+		gen:  gen,
 	}
 }
 
 func (uc *CreateCustomerUseCaseImpl) Execute(dto *dtos.CreateCustomerDTO) *entities.Customer {
 	customer := entities.NewCustomer(
 		dto.Name,
-		uc.gen.Generate(),
 		dto.BusinessIdentifier,
 	)
 

@@ -49,6 +49,7 @@ services:
     environment:
       - POSTGRESQL_USERNAME=docker
       - POSTGRESQL_PASSWORD=docker
+      - POSTGRESQL_POSTGRES_PASSWORD=docker
       - POSTGRESQL_DATABASE=route_bastion
     healthcheck:
       test: ["CMD-SHELL", "sh -c 'pg_isready -U docker -d route_bastion'"]

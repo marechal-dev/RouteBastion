@@ -8,14 +8,17 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
+	"github.com/go-playground/validator/v10"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 
 	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/database"
 	customers "github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/customers/infrastructure/http/controllers"
-	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/health"
+	health "github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/health/infrastructure/http/controllers"
 	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/shared/application/middlewares"
-	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/util"
+	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/shared/application/validators"
+	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/utils"
 )
 
 type Server struct {
@@ -23,11 +26,11 @@ type Server struct {
 
 	db database.DatabaseService
 
-	healthController health.HealthController
+	healthController    health.HealthController
 	customersController customers.CustomersController
 }
 
-func NewServer(config util.AppEnvConfig) *http.Server {
+func NewServer(config utils.AppEnvConfig) *http.Server {
 	port, _ := strconv.Atoi(config.ServerPort)
 
 	dbService := database.NewDatabaseServiceImpl(
@@ -41,12 +44,10 @@ func NewServer(config util.AppEnvConfig) *http.Server {
 
 	newServer := &Server{
 		port: port,
-		db: dbService,
+		db:   dbService,
 	}
 
-	util.InitTracer()
-	util.InitMeter()
-
+	newServer.RegisterCustomValidators()
 	newServer.RegisterControllers()
 
 	// Declare Server config
@@ -61,6 +62,12 @@ func NewServer(config util.AppEnvConfig) *http.Server {
 	return server
 }
 
+func (s *Server) RegisterCustomValidators() {
+	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
+		v.RegisterValidation("cargoKind", validators.IsValidCargoKind)
+	}
+}
+
 func (s *Server) RegisterControllers() {
 	s.healthController = health.NewHealthController(s.db)
 	s.customersController = customers.NewCustomersController(s.db)
@@ -72,7 +79,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	r.Use(otelgin.Middleware("RouteBastion-Broker-HTTP"))
 
 	r.Use(cors.New(cors.Config{
-		AllowAllOrigins: true,
+		AllowAllOrigins:  true,
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
 		AllowHeaders:     []string{"Accept", "Content-Type", "RouteBastion-API-Key"},
 		AllowCredentials: false,
@@ -87,7 +94,11 @@ func (s *Server) RegisterRoutes() http.Handler {
 	// Customers
 	customers := r.Group("/customers")
 	{
-		customers.GET("/:apiKey", middlewares.ApiKeyValidatorMiddleware(s.db), s.customersController.GetOneByApiKey)
+		customers.GET(
+			"/:apiKey",
+			middlewares.ApiKeyValidatorMiddleware(s.db),
+			s.customersController.GetOneByApiKey,
+		)
 		customers.POST("/", s.customersController.Create)
 	}
 

@@ -2,7 +2,7 @@
 // versions:
 //   sqlc v1.28.0
 
-package database
+package generated
 
 import (
 	"database/sql/driver"
@@ -245,11 +245,19 @@ type Constraint struct {
 	DeletedAt  pgtype.Timestamp
 }
 
+type ModelApiKey struct {
+	ID         go_uuid.UUID
+	Key        string
+	CustomerID go_uuid.UUID
+	CreatedAt  pgtype.Timestamp
+	ModifiedAt pgtype.Timestamp
+	DeletedAt  pgtype.Timestamp
+}
+
 type ModelCustomer struct {
 	ID                 go_uuid.UUID
 	Name               string
 	BusinessIdentifier string
-	ApiKey             string
 	CreatedAt          pgtype.Timestamp
 	ModifiedAt         pgtype.Timestamp
 	DeletedAt          pgtype.Timestamp

@@ -3,7 +3,7 @@
 //   sqlc v1.28.0
 // source: queries.sql
 
-package database
+package generated
 
 import (
 	"context"
@@ -12,34 +12,100 @@ import (
 	go_uuid "github.com/satori/go.uuid"
 )
 
+const createApiKey = `-- name: CreateApiKey :one
+INSERT INTO api_keys (
+  id, key, created_at
+) VALUES (
+  $1, $2, $3
+) RETURNING id, key, customer_id, created_at, modified_at, deleted_at
+`
+
+type CreateApiKeyParams struct {
+	ID        go_uuid.UUID
+	Key       string
+	CreatedAt pgtype.Timestamp
+}
+
+func (q *Queries) CreateApiKey(ctx context.Context, arg CreateApiKeyParams) (ModelApiKey, error) {
+	row := q.db.QueryRow(ctx, createApiKey, arg.ID, arg.Key, arg.CreatedAt)
+	var i ModelApiKey
+	err := row.Scan(
+		&i.ID,
+		&i.Key,
+		&i.CustomerID,
+		&i.CreatedAt,
+		&i.ModifiedAt,
+		&i.DeletedAt,
+	)
+	return i, err
+}
+
 const createCustomer = `-- name: CreateCustomer :one
 INSERT INTO customers (
-  id, name, business_identifier, api_key
+  id, name, business_identifier
 ) VALUES (
-  $1, $2, $3, $4
-) RETURNING id, name, business_identifier, api_key, created_at, modified_at, deleted_at
+  $1, $2, $3
+) RETURNING id, name, business_identifier, created_at, modified_at, deleted_at
 `
 
 type CreateCustomerParams struct {
 	ID                 go_uuid.UUID
 	Name               string
 	BusinessIdentifier string
-	ApiKey             string
 }
 
 func (q *Queries) CreateCustomer(ctx context.Context, arg CreateCustomerParams) (ModelCustomer, error) {
-	row := q.db.QueryRow(ctx, createCustomer,
-		arg.ID,
-		arg.Name,
-		arg.BusinessIdentifier,
-		arg.ApiKey,
-	)
+	row := q.db.QueryRow(ctx, createCustomer, arg.ID, arg.Name, arg.BusinessIdentifier)
 	var i ModelCustomer
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
 		&i.BusinessIdentifier,
-		&i.ApiKey,
+		&i.CreatedAt,
+		&i.ModifiedAt,
+		&i.DeletedAt,
+	)
+	return i, err
+}
+
+const createVehicle = `-- name: CreateVehicle :one
+INSERT INTO vehicles (
+  id,
+  plate,
+  capacity,
+  cargo_type,
+  customer_id,
+  created_at
+) VALUES (
+  $1, $2, $3, $4, $5, $6
+) RETURNING id, plate, capacity, cargo_type, customer_id, created_at, modified_at, deleted_at
+`
+
+type CreateVehicleParams struct {
+	ID         go_uuid.UUID
+	Plate      string
+	Capacity   float64
+	CargoType  CargoKind
+	CustomerID go_uuid.UUID
+	CreatedAt  pgtype.Timestamp
+}
+
+func (q *Queries) CreateVehicle(ctx context.Context, arg CreateVehicleParams) (Vehicle, error) {
+	row := q.db.QueryRow(ctx, createVehicle,
+		arg.ID,
+		arg.Plate,
+		arg.Capacity,
+		arg.CargoType,
+		arg.CustomerID,
+		arg.CreatedAt,
+	)
+	var i Vehicle
+	err := row.Scan(
+		&i.ID,
+		&i.Plate,
+		&i.Capacity,
+		&i.CargoType,
+		&i.CustomerID,
 		&i.CreatedAt,
 		&i.ModifiedAt,
 		&i.DeletedAt,
@@ -60,6 +126,22 @@ type DeleteConstraintParams struct {
 
 func (q *Queries) DeleteConstraint(ctx context.Context, arg DeleteConstraintParams) error {
 	_, err := q.db.Exec(ctx, deleteConstraint, arg.ID, arg.DeletedAt)
+	return err
+}
+
+const deleteVehicle = `-- name: DeleteVehicle :exec
+UPDATE vehicles
+  SET deleted_at = $2
+WHERE vehicles.id = $1
+`
+
+type DeleteVehicleParams struct {
+	ID        go_uuid.UUID
+	DeletedAt pgtype.Timestamp
+}
+
+func (q *Queries) DeleteVehicle(ctx context.Context, arg DeleteVehicleParams) error {
+	_, err := q.db.Exec(ctx, deleteVehicle, arg.ID, arg.DeletedAt)
 	return err
 }
 
@@ -132,6 +214,34 @@ func (q *Queries) GetActiveOptimizationsByCustomerID(ctx context.Context, custom
 		return nil, err
 	}
 	return items, nil
+}
+
+const getApiKeyByCustomerID = `-- name: GetApiKeyByCustomerID :one
+SELECT
+  ak.id,
+  ak.key,
+  ak.customer_id,
+  ak.created_at,
+  ak.modified_at,
+  ak.deleted_at
+FROM api_keys AS ak
+WHERE (ak.customer_id, ak.deleted_at) = ($1, NULL)
+ORDER BY ak.created_at DESC
+LIMIT 1
+`
+
+func (q *Queries) GetApiKeyByCustomerID(ctx context.Context, customerID go_uuid.UUID) (ModelApiKey, error) {
+	row := q.db.QueryRow(ctx, getApiKeyByCustomerID, customerID)
+	var i ModelApiKey
+	err := row.Scan(
+		&i.ID,
+		&i.Key,
+		&i.CustomerID,
+		&i.CreatedAt,
+		&i.ModifiedAt,
+		&i.DeletedAt,
+	)
+	return i, err
 }
 
 const getAvailableProviders = `-- name: GetAvailableProviders :many
@@ -232,30 +342,81 @@ func (q *Queries) GetConstraintsByCustomerID(ctx context.Context, customerID go_
 
 const getCustomerByApiKey = `-- name: GetCustomerByApiKey :one
 SELECT
-  c.id,
-  c.name,
-  c.business_identifier,
-  c.api_key,
-  c.created_at,
-  c.modified_at,
-  c.deleted_at
+  c.id, c.name, c.business_identifier, c.created_at, c.modified_at, c.deleted_at,
+  ak.id, ak.key, ak.customer_id, ak.created_at, ak.modified_at, ak.deleted_at
 FROM customers AS c
-WHERE c.api_key = $1 LIMIT 1
+JOIN api_keys AS ak
+  ON c.id = ak.customer_id
+WHERE ak.key = $1
+LIMIT 1
 `
 
-func (q *Queries) GetCustomerByApiKey(ctx context.Context, apiKey string) (ModelCustomer, error) {
-	row := q.db.QueryRow(ctx, getCustomerByApiKey, apiKey)
-	var i ModelCustomer
+type GetCustomerByApiKeyRow struct {
+	ModelCustomer ModelCustomer
+	ModelApiKey   ModelApiKey
+}
+
+func (q *Queries) GetCustomerByApiKey(ctx context.Context, key string) (GetCustomerByApiKeyRow, error) {
+	row := q.db.QueryRow(ctx, getCustomerByApiKey, key)
+	var i GetCustomerByApiKeyRow
 	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.BusinessIdentifier,
-		&i.ApiKey,
-		&i.CreatedAt,
-		&i.ModifiedAt,
-		&i.DeletedAt,
+		&i.ModelCustomer.ID,
+		&i.ModelCustomer.Name,
+		&i.ModelCustomer.BusinessIdentifier,
+		&i.ModelCustomer.CreatedAt,
+		&i.ModelCustomer.ModifiedAt,
+		&i.ModelCustomer.DeletedAt,
+		&i.ModelApiKey.ID,
+		&i.ModelApiKey.Key,
+		&i.ModelApiKey.CustomerID,
+		&i.ModelApiKey.CreatedAt,
+		&i.ModelApiKey.ModifiedAt,
+		&i.ModelApiKey.DeletedAt,
 	)
 	return i, err
+}
+
+const getManyVehiclesByCustomerID = `-- name: GetManyVehiclesByCustomerID :many
+SELECT
+  v.id,
+  v.plate,
+  v.capacity,
+  v.cargo_type,
+  v.customer_id,
+  v.created_at,
+  v.modified_at,
+  v.deleted_at
+FROM vehicles AS v
+WHERE (v.customer_id, v.deleted_at) = ($1, NULL)
+`
+
+func (q *Queries) GetManyVehiclesByCustomerID(ctx context.Context, customerID go_uuid.UUID) ([]Vehicle, error) {
+	rows, err := q.db.Query(ctx, getManyVehiclesByCustomerID, customerID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Vehicle
+	for rows.Next() {
+		var i Vehicle
+		if err := rows.Scan(
+			&i.ID,
+			&i.Plate,
+			&i.Capacity,
+			&i.CargoType,
+			&i.CustomerID,
+			&i.CreatedAt,
+			&i.ModifiedAt,
+			&i.DeletedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getOptimizationHistoryByCustomerID = `-- name: GetOptimizationHistoryByCustomerID :many

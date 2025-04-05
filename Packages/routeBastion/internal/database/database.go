@@ -10,13 +10,14 @@ import (
 	"github.com/exaring/otelpgx"
 	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/database/generated"
 )
 
 // Service represents a service that interacts with a database.
 type DatabaseService interface {
 	GetConn() *pgxpool.Pool
 
-	GetQueries() *Queries
+	GetQueries() *generated.Queries
 
 	// Health returns a map of health status information.
 	// The keys and values in the map are service-specific.
@@ -63,7 +64,15 @@ func NewDatabaseServiceImpl(
 
 	ctx := context.Background()
 
-	connStr := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable&search_path=%s", username, password, host, port, database, schema)
+	connStr := fmt.Sprintf(
+		"postgres://%s:%s@%s:%s/%s?sslmode=disable&search_path=%s",
+		username,
+		password,
+		host,
+		port,
+		database,
+		schema,
+	)
 
 	cfg, err := pgxpool.ParseConfig(connStr)
 	if err != nil {
@@ -109,14 +118,33 @@ func (s *DatabaseServiceImpl) Health() map[string]string {
 
 	// Get database stats (like open connections, in use, idle, etc.)
 	dbStats := s.db.Stat()
-	stats["maxOpenConnections"] = strconv.Itoa(int(dbStats.MaxConns())) // Maximum number of open connections
-	stats["totalConnections"] = strconv.Itoa(int(dbStats.TotalConns()))  // Total number of established connections
-	stats["connectionsInUse"] = strconv.Itoa(int(dbStats.AcquiredConns()))          // Number of connections currently in use
-	stats["idle"] = strconv.Itoa(int(dbStats.IdleConns()))                // Number of idle connections
-	stats["waitCount"] = strconv.FormatInt(dbStats.AcquireCount(), 10)   // Total number of successful acquires from the pool
-	stats["waitDuration"] = dbStats.AcquireDuration().String()           // Total duration of all successful acquires
-	stats["maxIdleClosed"] = strconv.FormatInt(dbStats.MaxIdleDestroyCount(), 10) // Connections closed due to exceeding MaxConnIdleTime
-	stats["maxLifetimeClosed"] = strconv.FormatInt(dbStats.MaxLifetimeDestroyCount(), 10) // Connections closed due to exceeding MaxConnLifetime
+	stats["maxOpenConnections"] = strconv.Itoa(
+		int(dbStats.MaxConns()),
+	) // Maximum number of open connections
+	stats["totalConnections"] = strconv.Itoa(
+		int(dbStats.TotalConns()),
+	) // Total number of established connections
+	stats["connectionsInUse"] = strconv.Itoa(
+		int(dbStats.AcquiredConns()),
+	) // Number of connections currently in use
+	stats["idle"] = strconv.Itoa(
+		int(dbStats.IdleConns()),
+	) // Number of idle connections
+	stats["waitCount"] = strconv.FormatInt(
+		dbStats.AcquireCount(),
+		10,
+	) // Total number of successful acquires from the pool
+	stats["waitDuration"] = dbStats.AcquireDuration().
+		String()
+		// Total duration of all successful acquires
+	stats["maxIdleClosed"] = strconv.FormatInt(
+		dbStats.MaxIdleDestroyCount(),
+		10,
+	) // Connections closed due to exceeding MaxConnIdleTime
+	stats["maxLifetimeClosed"] = strconv.FormatInt(
+		dbStats.MaxLifetimeDestroyCount(),
+		10,
+	) // Connections closed due to exceeding MaxConnLifetime
 
 	// Evaluate stats to provide a health message
 	if dbStats.TotalConns() > 40 {
@@ -138,8 +166,8 @@ func (s *DatabaseServiceImpl) Health() map[string]string {
 	return stats
 }
 
-func (s *DatabaseServiceImpl) GetQueries() *Queries {
-	return New(s.db)
+func (s *DatabaseServiceImpl) GetQueries() *generated.Queries {
+	return generated.New(s.db)
 }
 
 // Close closes the database connection.

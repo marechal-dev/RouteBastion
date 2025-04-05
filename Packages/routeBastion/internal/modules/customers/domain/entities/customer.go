@@ -7,48 +7,44 @@ import (
 )
 
 type Customer struct {
-	id uuid.UUID
-	name string
-	apiKey string
+	id                 uuid.UUID
+	name               string
+	apiKey             string
 	businessIdentifier string
-	createdAt *time.Time
-	modifiedAt *time.Time
-	deletedAt *time.Time
+	createdAt          *time.Time
+	modifiedAt         *time.Time
+	deletedAt          *time.Time
 }
 
 func NewCustomer(
 	name string,
-	apiKey string,
 	businessIdentifier string,
 ) *Customer {
 	return &Customer{
-		id: uuid.NewV4(),
-		name: name,
-		apiKey: apiKey,
+		id:                 uuid.NewV4(),
+		name:               name,
 		businessIdentifier: businessIdentifier,
-		createdAt: &time.Time{},
-		modifiedAt: nil,
-		deletedAt: nil,
+		createdAt:          &time.Time{},
+		modifiedAt:         nil,
+		deletedAt:          nil,
 	}
 }
 
 func NewCustomerFull(
 	id uuid.UUID,
 	name string,
-	apiKey string,
 	businessIdentifier string,
 	createdAt *time.Time,
 	modifiedAt *time.Time,
 	deletedAt *time.Time,
 ) *Customer {
 	return &Customer{
-		id: id,
-		name: name,
-		apiKey: apiKey,
+		id:                 id,
+		name:               name,
 		businessIdentifier: businessIdentifier,
-		createdAt: createdAt,
-		modifiedAt: modifiedAt,
-		deletedAt: deletedAt,
+		createdAt:          createdAt,
+		modifiedAt:         modifiedAt,
+		deletedAt:          deletedAt,
 	}
 }
 
@@ -62,15 +58,6 @@ func (c *Customer) Name() string {
 
 func (c *Customer) SetName(name string) {
 	c.name = name
-	c.touch()
-}
-
-func (c *Customer) ApiKey() string {
-	return c.apiKey
-}
-
-func (c *Customer) SetApiKey(apiKey string) {
-	c.apiKey = apiKey
 	c.touch()
 }
 

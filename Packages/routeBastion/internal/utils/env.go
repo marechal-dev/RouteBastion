@@ -1,14 +1,14 @@
-package util
+package utils
 
 import "github.com/spf13/viper"
 
 type AppEnvConfig struct {
 	DBUsername string `mapstructure:"DB_USERNAME"`
 	DBPassword string `mapstructure:"DB_PASSWORD"`
-	DBHost string `mapstructure:"DB_HOST"`
-	DBPort string `mapstructure:"DB_PORT"`
+	DBHost     string `mapstructure:"DB_HOST"`
+	DBPort     string `mapstructure:"DB_PORT"`
 	DBDatabase string `mapstructure:"DB_DATABASE"`
-	DBSchema string `mapstructure:"DB_SCHEMA"`
+	DBSchema   string `mapstructure:"DB_SCHEMA"`
 	ServerPort string `mapstructure:"SERVER_PORT"`
 }
 

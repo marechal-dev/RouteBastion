@@ -1,26 +1,74 @@
 -- name: CreateCustomer :one
 INSERT INTO customers (
-  id, name, business_identifier, api_key
+  id, name, business_identifier
 ) VALUES (
-  $1, $2, $3, $4
+  $1, $2, $3
 ) RETURNING *;
 
 -- name: GetCustomerByApiKey :one
 SELECT
-  c.id,
-  c.name,
-  c.business_identifier,
-  c.api_key,
-  c.created_at,
-  c.modified_at,
-  c.deleted_at
+  sqlc.embed(c),
+  sqlc.embed(ak)
 FROM customers AS c
-WHERE c.api_key = $1 LIMIT 1;
+JOIN api_keys AS ak
+  ON c.id = ak.customer_id
+WHERE ak.key = $1
+LIMIT 1;
 
 -- name: DisableCustomer :exec
 UPDATE customers
   SET deleted_at = $2
 WHERE customers.id = $1;
+
+-- name: CreateApiKey :one
+INSERT INTO api_keys (
+  id, key, created_at
+) VALUES (
+  $1, $2, $3
+) RETURNING *;
+
+-- name: GetApiKeyByCustomerID :one
+SELECT
+  ak.id,
+  ak.key,
+  ak.customer_id,
+  ak.created_at,
+  ak.modified_at,
+  ak.deleted_at
+FROM api_keys AS ak
+WHERE (ak.customer_id, ak.deleted_at) = ($1, NULL)
+ORDER BY ak.created_at DESC
+LIMIT 1;
+
+-- name: CreateVehicle :one
+INSERT INTO vehicles (
+  id,
+  plate,
+  capacity,
+  cargo_type,
+  customer_id,
+  created_at
+) VALUES (
+  $1, $2, $3, $4, $5, $6
+) RETURNING *;
+
+-- name: GetManyVehiclesByCustomerID :many
+SELECT
+  v.id,
+  v.plate,
+  v.capacity,
+  v.cargo_type,
+  v.customer_id,
+  v.created_at,
+  v.modified_at,
+  v.deleted_at
+FROM vehicles AS v
+WHERE (v.customer_id, v.deleted_at) = ($1, NULL);
+
+-- name: DeleteVehicle :exec
+UPDATE vehicles
+  SET deleted_at = $2
+WHERE vehicles.id = $1;
 
 -- name: InsertConstraint :one
 INSERT INTO constraints (

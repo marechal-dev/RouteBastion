@@ -42,7 +42,15 @@ CREATE TABLE "customers" (
   "id" uuid PRIMARY KEY NOT NULL DEFAULT (uuid_generate_v4()),
   "name" text NOT NULL,
   "business_identifier" text UNIQUE NOT NULL,
-  "api_key" text UNIQUE NOT NULL,
+  "created_at" timestamp NOT NULL DEFAULT (now()),
+  "modified_at" timestamp DEFAULT null,
+  "deleted_at" timestamp DEFAULT null
+);
+
+CREATE TABLE "api_keys" (
+  "id" uuid PRIMARY KEY NOT NULL DEFAULT (uuid_generate_v4()),
+  "key" text UNIQUE NOT NULL,
+  "customer_id" uuid NOT NULL,
   "created_at" timestamp NOT NULL DEFAULT (now()),
   "modified_at" timestamp DEFAULT null,
   "deleted_at" timestamp DEFAULT null
@@ -120,6 +128,8 @@ CREATE TABLE "vehicles" (
   "deleted_at" timestamp DEFAULT null
 );
 
+CREATE INDEX "idx_api_keys_customer_id" ON "api_keys" ("customer_id");
+
 CREATE INDEX "idx_constraints_customer_id" ON "constraints" ("customer_id");
 
 CREATE INDEX "idx_optimization_id" ON "optimization_waypoints" ("optimization_id");
@@ -142,6 +152,10 @@ CREATE INDEX "idx_providers_active" ON "providers" ("id") WHERE deleted_at IS NU
 
 CREATE INDEX "idx_optimizations_active" ON "optimizations" ("customer_id") WHERE ended_at IS NULL;
 
+CREATE INDEX "idx_api_keys_customer_id_created_at_desc_active" ON "api_keys" ("customer_id", "created_at" DESC) WHERE deleted_at IS NULL;
+
+ALTER TABLE "api_keys" ADD FOREIGN KEY ("customer_id") REFERENCES "customers" ("id");
+
 ALTER TABLE "constraints" ADD FOREIGN KEY ("customer_id") REFERENCES "customers" ("id");
 
 ALTER TABLE "optimization_waypoints" ADD FOREIGN KEY ("optimization_id") REFERENCES "optimizations" ("id");
@@ -159,4 +173,3 @@ ALTER TABLE "provider_communication" ADD FOREIGN KEY ("provider_id") REFERENCES 
 ALTER TABLE "provider_constraints_and_features" ADD FOREIGN KEY ("provider_id") REFERENCES "providers" ("id");
 
 ALTER TABLE "vehicles" ADD FOREIGN KEY ("customer_id") REFERENCES "customers" ("id");
-

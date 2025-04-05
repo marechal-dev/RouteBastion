@@ -6,6 +6,7 @@ overrides:
       customer: "ModelCustomer"
       limitation: "ModelLimitation"
       provider: "ModelProvider"
+      api_key: "ModelApiKey"
       provider_communication: "ModelProviderCommunication"
       provider_constraints_and_feature: "ModelProviderConstraintsAndFeatures"
       optimization: "ModelOptimization"
@@ -22,16 +23,16 @@ overrides:
 
 sql:
   - engine: "postgresql"
-    queries: "database/queries.sql"
-    schema: "database/schema.sql"
+    queries: "sql/queries.sql"
+    schema: "sql/schema.sql"
     database:
       uri: "postgresql://docker:docker@localhost:5432/route_bastion"
     gen:
       go:
         sql_package: "pgx/v5"
         emit_pointers_for_null_types: true
-        package: "database"
-        out: "internal/database"
+        package: "generated"
+        out: "internal/database/generated"
     rules:
       - sqlc/db-prepare
       - no-delete
