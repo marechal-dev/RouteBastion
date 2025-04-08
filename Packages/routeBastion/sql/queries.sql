@@ -22,9 +22,9 @@ WHERE customers.id = $1;
 
 -- name: CreateApiKey :one
 INSERT INTO api_keys (
-  id, key, created_at
+  id, key, customer_id, created_at
 ) VALUES (
-  $1, $2, $3
+  $1, $2, $3, $4
 ) RETURNING *;
 
 -- name: GetApiKeyByCustomerID :one
@@ -39,6 +39,20 @@ FROM api_keys AS ak
 WHERE (ak.customer_id, ak.deleted_at) = ($1, NULL)
 ORDER BY ak.created_at DESC
 LIMIT 1;
+
+-- name: DeleteApiKey :exec
+UPDATE api_keys
+SET
+	modified_at = $2,
+	deleted_at = $3
+WHERE id = $1;
+
+-- name: UpdateApiKey :exec
+UPDATE api_keys
+SET
+	key = $2,
+	modified_at = $3
+WHERE id = $1;
 
 -- name: CreateVehicle :one
 INSERT INTO vehicles (

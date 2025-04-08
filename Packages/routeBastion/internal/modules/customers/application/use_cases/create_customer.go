@@ -32,6 +32,13 @@ func (uc *CreateCustomerUseCaseImpl) Execute(dto *dtos.CreateCustomerDTO) *entit
 		dto.BusinessIdentifier,
 	)
 
+	key := uc.gen.Generate()
+
+	apiKey := entities.NewApiKey(
+		key,
+		customer.ID(),
+	)
+
 	uc.repo.Create(customer)
 
 	return customer

@@ -14,20 +14,26 @@ import (
 
 const createApiKey = `-- name: CreateApiKey :one
 INSERT INTO api_keys (
-  id, key, created_at
+  id, key, customer_id, created_at
 ) VALUES (
-  $1, $2, $3
+  $1, $2, $3, $4
 ) RETURNING id, key, customer_id, created_at, modified_at, deleted_at
 `
 
 type CreateApiKeyParams struct {
-	ID        go_uuid.UUID
-	Key       string
-	CreatedAt pgtype.Timestamp
+	ID         go_uuid.UUID
+	Key        string
+	CustomerID go_uuid.UUID
+	CreatedAt  pgtype.Timestamp
 }
 
 func (q *Queries) CreateApiKey(ctx context.Context, arg CreateApiKeyParams) (ModelApiKey, error) {
-	row := q.db.QueryRow(ctx, createApiKey, arg.ID, arg.Key, arg.CreatedAt)
+	row := q.db.QueryRow(ctx, createApiKey,
+		arg.ID,
+		arg.Key,
+		arg.CustomerID,
+		arg.CreatedAt,
+	)
 	var i ModelApiKey
 	err := row.Scan(
 		&i.ID,
@@ -111,6 +117,25 @@ func (q *Queries) CreateVehicle(ctx context.Context, arg CreateVehicleParams) (V
 		&i.DeletedAt,
 	)
 	return i, err
+}
+
+const deleteApiKey = `-- name: DeleteApiKey :exec
+UPDATE api_keys
+SET
+	modified_at = $2,
+	deleted_at = $3
+WHERE id = $1
+`
+
+type DeleteApiKeyParams struct {
+	ID         go_uuid.UUID
+	ModifiedAt pgtype.Timestamp
+	DeletedAt  pgtype.Timestamp
+}
+
+func (q *Queries) DeleteApiKey(ctx context.Context, arg DeleteApiKeyParams) error {
+	_, err := q.db.Exec(ctx, deleteApiKey, arg.ID, arg.ModifiedAt, arg.DeletedAt)
+	return err
 }
 
 const deleteConstraint = `-- name: DeleteConstraint :exec
@@ -542,6 +567,25 @@ func (q *Queries) InsertConstraint(ctx context.Context, arg InsertConstraintPara
 		&i.DeletedAt,
 	)
 	return i, err
+}
+
+const updateApiKey = `-- name: UpdateApiKey :exec
+UPDATE api_keys
+SET
+	key = $2,
+	modified_at = $3
+WHERE id = $1
+`
+
+type UpdateApiKeyParams struct {
+	ID         go_uuid.UUID
+	Key        string
+	ModifiedAt pgtype.Timestamp
+}
+
+func (q *Queries) UpdateApiKey(ctx context.Context, arg UpdateApiKeyParams) error {
+	_, err := q.db.Exec(ctx, updateApiKey, arg.ID, arg.Key, arg.ModifiedAt)
+	return err
 }
 
 const updateConstraintKindAndValue = `-- name: UpdateConstraintKindAndValue :exec

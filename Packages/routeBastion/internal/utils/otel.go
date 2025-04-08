@@ -18,7 +18,7 @@ func InitTracer() (*trace.TracerProvider, error) {
 
 	res, err := resource.New(ctx,
 		resource.WithAttributes(
-			semconv.ServiceNameKey.String("RouteBastion-Broker-Tracing"),
+			semconv.ServiceNameKey.String("RouteBastion-Broker-Traces"),
 		),
 	)
 	if err != nil {
@@ -49,7 +49,7 @@ func InitMeter() (*metric.MeterProvider, error) {
 
 	res, err := resource.New(ctx,
 		resource.WithAttributes(
-			semconv.ServiceNameKey.String("RouteBastion-Broker-Measuring"),
+			semconv.ServiceNameKey.String("RouteBastion-Broker-Metrics"),
 		),
 	)
 	if err != nil {

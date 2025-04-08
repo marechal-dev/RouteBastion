@@ -25,15 +25,14 @@ services:
     ports:
       - 8080:8080
     environment:
-      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+      - OTEL_EXPORTER_OTLP_ENDPOINT=otel-collector:4317
       - OTEL_EXPORTER_JAEGER_ENDPOINT=http://jaeger:14268/api/traces
       - OTEL_EXPORTER_PROMETHEUS_PORT=9090
     depends_on:
       database:
         condition: service_healthy
       cache:
-        condition: service_started
-        required: true
+        condition: service_healthy
     networks:
       - default
       - metrics

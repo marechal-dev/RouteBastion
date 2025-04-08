@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/exaring/otelpgx"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/database/generated"
@@ -18,6 +19,7 @@ type DatabaseService interface {
 	GetConn() *pgxpool.Pool
 
 	GetQueries() *generated.Queries
+	GetQueriesWithTx(tx pgx.Tx) *generated.Queries
 
 	// Health returns a map of health status information.
 	// The keys and values in the map are service-specific.
@@ -168,6 +170,10 @@ func (s *DatabaseServiceImpl) Health() map[string]string {
 
 func (s *DatabaseServiceImpl) GetQueries() *generated.Queries {
 	return generated.New(s.db)
+}
+
+func (s *DatabaseServiceImpl) GetQueriesWithTx(tx pgx.Tx) *generated.Queries {
+	return generated.New(tx)
 }
 
 // Close closes the database connection.
