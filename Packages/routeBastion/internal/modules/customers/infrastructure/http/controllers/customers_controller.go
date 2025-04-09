@@ -5,26 +5,26 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/database"
 	usecases "github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/customers/application/use_cases"
 	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/customers/dtos"
 	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/customers/infrastructure/cryptography"
 	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/customers/infrastructure/persistence"
 	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/customers/infrastructure/presenters"
+	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/platform/database"
 )
 
 type CustomersController struct {
-	db database.DatabaseService
+	db database.DBProvider
 }
 
-func NewCustomersController(db database.DatabaseService) CustomersController {
+func NewCustomersController(db database.DBProvider) CustomersController {
 	return CustomersController{
 		db: db,
 	}
 }
 
 func (cc *CustomersController) Create(c *gin.Context) {
-	dto := &dtos.CreateCustomerDTO{};
+	dto := &dtos.CreateCustomerDTO{}
 
 	err := c.BindJSON(&dto)
 

@@ -3,7 +3,7 @@ package mappers
 import (
 	"time"
 
-	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/database/generated"
+	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/infrastructure/database/generated"
 	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/customers/domain/entities"
 )
 

@@ -13,18 +13,19 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 
-	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/database"
+	infraDB "github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/infrastructure/database"
 	customers "github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/customers/infrastructure/http/controllers"
 	health "github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/health/infrastructure/http/controllers"
 	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/shared/application/middlewares"
 	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/shared/application/validators"
+	platformDB "github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/platform/database"
 	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/utils"
 )
 
 type Server struct {
 	port int
 
-	db database.DatabaseService
+	db platformDB.DBProvider
 
 	healthController    health.HealthController
 	customersController customers.CustomersController
@@ -33,7 +34,7 @@ type Server struct {
 func NewServer(config utils.AppEnvConfig) *http.Server {
 	port, _ := strconv.Atoi(config.ServerPort)
 
-	dbService := database.NewDatabaseServiceImpl(
+	provider := infraDB.NewPgxProvider(
 		config.DBDatabase,
 		config.DBPassword,
 		config.DBUsername,
@@ -44,7 +45,7 @@ func NewServer(config utils.AppEnvConfig) *http.Server {
 
 	newServer := &Server{
 		port: port,
-		db:   dbService,
+		db:   provider,
 	}
 
 	newServer.RegisterCustomValidators()

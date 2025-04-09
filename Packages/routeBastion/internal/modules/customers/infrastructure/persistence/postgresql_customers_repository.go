@@ -3,18 +3,18 @@ package persistence
 import (
 	"context"
 
-	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/database"
-	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/database/generated"
+	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/infrastructure/database/generated"
 	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/customers/domain/entities"
 	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/customers/infrastructure/mappers"
+	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/platform/database"
 )
 
 type PostgresqlCustomersRepository struct {
 	queries *generated.Queries
 }
 
-func NewPostgreSQLCustomersRepository(db database.DatabaseService) *PostgresqlCustomersRepository {
-	queries := db.GetQueries()
+func NewPostgreSQLCustomersRepository(db database.DBProvider) *PostgresqlCustomersRepository {
+	queries := generated.New(db.GetConn())
 
 	return &PostgresqlCustomersRepository{
 		queries: queries,

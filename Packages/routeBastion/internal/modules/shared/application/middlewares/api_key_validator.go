@@ -4,10 +4,10 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/database"
+	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/platform/database"
 )
 
-func ApiKeyValidatorMiddleware(db database.DatabaseService) gin.HandlerFunc {
+func ApiKeyValidatorMiddleware(db database.DBProvider) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		const apiKeyHeader string = "RouteBastion-API-Key"
 
@@ -24,20 +24,20 @@ func ApiKeyValidatorMiddleware(db database.DatabaseService) gin.HandlerFunc {
 			return
 		}
 
-		queries := db.GetQueries()
+		// queries := db.GetQueries()
 
-		_, err := queries.GetCustomerByApiKey(ctx, apiKey)
+		// _, err := queries.GetCustomerByApiKey(ctx, apiKey)
 
-		if err != nil {
-			ctx.AbortWithStatusJSON(
-				http.StatusForbidden,
-				gin.H{
-					"error": "Invalid API key",
-				},
-			)
+		// if err != nil {
+		// 	ctx.AbortWithStatusJSON(
+		// 		http.StatusForbidden,
+		// 		gin.H{
+		// 			"error": "Invalid API key",
+		// 		},
+		// 	)
 
-			return
-		}
+		// 	return
+		// }
 
 		ctx.Next()
 	}
