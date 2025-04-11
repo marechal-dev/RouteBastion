@@ -144,6 +144,8 @@ CREATE INDEX "idx_provider_communication_provider_id" ON "provider_communication
 
 CREATE INDEX "idx_provider_constraints_and_features_provider_id" ON "provider_constraints_and_features" ("provider_id");
 
+CREATE INDEX "idx_vehicles_customer_id" ON "vehicles" ("customer_id");
+
 CREATE INDEX "idx_constraints_active" ON "constraints" ("customer_id") WHERE deleted_at IS NULL;
 
 CREATE INDEX "idx_providers_active" ON "providers" ("id") WHERE deleted_at IS NULL;

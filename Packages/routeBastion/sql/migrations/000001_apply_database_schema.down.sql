@@ -24,6 +24,7 @@ DROP INDEX IF EXISTS "idx_optimization_vehicle_vehicle_id";
 DROP INDEX IF EXISTS "idx_provider_communication_provider_id";
 DROP INDEX IF EXISTS "idx_provider_constraints_and_features_provider_id";
 DROP INDEX IF EXISTS "idx_providers_active";
+DROP INDEX IF EXISTS "idx_vehicles_customer_id";
 
 -- Drop all tables (reverse order of dependencies)
 DROP TABLE IF EXISTS "vehicles";

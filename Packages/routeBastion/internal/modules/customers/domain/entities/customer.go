@@ -1,7 +1,10 @@
 package entities
 
 import (
+	"errors"
 	"time"
+
+	"slices"
 
 	uuid "github.com/satori/go.uuid"
 )
@@ -9,31 +12,41 @@ import (
 type Customer struct {
 	id                 uuid.UUID
 	name               string
-	apiKey             string
 	businessIdentifier string
-	createdAt          *time.Time
-	modifiedAt         *time.Time
-	deletedAt          *time.Time
+
+	apiKey   *ApiKey
+	vehicles []*Vehicle
+
+	createdAt  *time.Time
+	modifiedAt *time.Time
+	deletedAt  *time.Time
 }
 
 func NewCustomer(
 	name string,
 	businessIdentifier string,
+	apiKey *ApiKey,
 ) *Customer {
 	return &Customer{
 		id:                 uuid.NewV4(),
 		name:               name,
 		businessIdentifier: businessIdentifier,
-		createdAt:          &time.Time{},
-		modifiedAt:         nil,
-		deletedAt:          nil,
+
+		apiKey:   apiKey,
+		vehicles: []*Vehicle{},
+
+		createdAt:  &time.Time{},
+		modifiedAt: nil,
+		deletedAt:  nil,
 	}
 }
 
-func NewCustomerFull(
+func RehydrateCustomer(
 	id uuid.UUID,
 	name string,
 	businessIdentifier string,
+	apiKey *ApiKey,
+	vehicles []*Vehicle,
 	createdAt *time.Time,
 	modifiedAt *time.Time,
 	deletedAt *time.Time,
@@ -42,9 +55,13 @@ func NewCustomerFull(
 		id:                 id,
 		name:               name,
 		businessIdentifier: businessIdentifier,
-		createdAt:          createdAt,
-		modifiedAt:         modifiedAt,
-		deletedAt:          deletedAt,
+
+		apiKey:   apiKey,
+		vehicles: vehicles,
+
+		createdAt:  createdAt,
+		modifiedAt: modifiedAt,
+		deletedAt:  deletedAt,
 	}
 }
 
@@ -63,6 +80,43 @@ func (c *Customer) SetName(name string) {
 
 func (c *Customer) BusinessIdentifier() string {
 	return c.businessIdentifier
+}
+
+func (c *Customer) AddVehicle(vehicle *Vehicle) error {
+	for _, v := range c.vehicles {
+		if v.ID().String() == vehicle.ID().String() {
+			return errors.New("vehicle already added")
+		}
+	}
+
+	c.vehicles = append(c.vehicles, vehicle)
+	c.touch()
+
+	return nil
+}
+
+func (c *Customer) RemoveVehicle(vehicleID string) error {
+	for i, v := range c.vehicles {
+		if v.ID().String() == vehicleID {
+			c.vehicles = slices.Delete(c.vehicles, i, i+1)
+			c.touch()
+
+			return nil
+		}
+	}
+
+	return errors.New("vehicle not found")
+}
+
+func (c *Customer) SetApiKey(key *ApiKey) error {
+	if key == nil {
+		return errors.New("api key cannot be nil")
+	}
+
+	c.apiKey = key
+	c.touch()
+
+	return nil
 }
 
 func (c *Customer) CreatedAt() *time.Time {

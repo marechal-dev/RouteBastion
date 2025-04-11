@@ -8,10 +8,13 @@ INSERT INTO customers (
 -- name: GetCustomerByApiKey :one
 SELECT
   sqlc.embed(c),
-  sqlc.embed(ak)
+  sqlc.embed(ak),
+  sqlc.embed(v)
 FROM customers AS c
 JOIN api_keys AS ak
   ON c.id = ak.customer_id
+JOIN vehicles AS v
+  ON c.id = v.customer_id
 WHERE ak.key = $1
 LIMIT 1;
 
@@ -27,19 +30,6 @@ INSERT INTO api_keys (
   $1, $2, $3, $4
 ) RETURNING *;
 
--- name: GetApiKeyByCustomerID :one
-SELECT
-  ak.id,
-  ak.key,
-  ak.customer_id,
-  ak.created_at,
-  ak.modified_at,
-  ak.deleted_at
-FROM api_keys AS ak
-WHERE (ak.customer_id, ak.deleted_at) = ($1, NULL)
-ORDER BY ak.created_at DESC
-LIMIT 1;
-
 -- name: DeleteApiKey :exec
 UPDATE api_keys
 SET
@@ -53,6 +43,19 @@ SET
 	key = $2,
 	modified_at = $3
 WHERE id = $1;
+
+-- name: GetApiKeyByCustomerID :one
+SELECT
+  ak.id,
+  ak.key,
+  ak.customer_id,
+  ak.created_at,
+  ak.modified_at,
+  ak.deleted_at
+FROM api_keys AS ak
+WHERE (ak.customer_id, ak.deleted_at) = ($1, NULL)
+ORDER BY ak.created_at DESC
+LIMIT 1;
 
 -- name: CreateVehicle :one
 INSERT INTO vehicles (

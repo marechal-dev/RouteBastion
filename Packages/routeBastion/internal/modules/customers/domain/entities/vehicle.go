@@ -21,53 +21,48 @@ const (
 )
 
 type Vehicle struct {
-	id uuid.UUID
-	plate string
-	capacity float64
-	cargoType CargoKind
-	customerID uuid.UUID
-	createdAt *time.Time
+	id         uuid.UUID
+	plate      string
+	cargoType  CargoKind
+	capacity   float64
+	createdAt  *time.Time
 	modifiedAt *time.Time
-	deletedAt *time.Time
+	deletedAt  *time.Time
 }
 
 func NewVehicle(
 	plate string,
 	capacity float64,
 	cargoType CargoKind,
-	customerID uuid.UUID,
 ) *Vehicle {
 	return &Vehicle{
-		id: uuid.NewV4(),
-		plate: plate,
-		capacity: capacity,
-		cargoType: cargoType,
-		customerID: customerID,
-		createdAt: &time.Time{},
+		id:         uuid.NewV4(),
+		plate:      plate,
+		capacity:   capacity,
+		cargoType:  cargoType,
+		createdAt:  &time.Time{},
 		modifiedAt: nil,
-		deletedAt: nil,
+		deletedAt:  nil,
 	}
 }
 
-func NewFullVehicle(
+func RehydrateVehicle(
 	id uuid.UUID,
 	plate string,
 	capacity float64,
 	cargoType CargoKind,
-	customerID uuid.UUID,
 	createdAt *time.Time,
 	modifiedAt *time.Time,
 	deletedAt *time.Time,
 ) *Vehicle {
 	return &Vehicle{
-		id: id,
-		plate: plate,
-		capacity: capacity,
-		cargoType: cargoType,
-		customerID: customerID,
-		createdAt: createdAt,
+		id:         id,
+		plate:      plate,
+		capacity:   capacity,
+		cargoType:  cargoType,
+		createdAt:  createdAt,
 		modifiedAt: modifiedAt,
-		deletedAt: deletedAt,
+		deletedAt:  deletedAt,
 	}
 }
 
@@ -95,10 +90,6 @@ func (v *Vehicle) SetCapacity(capacity float64) {
 
 func (v *Vehicle) CargoType() CargoKind {
 	return v.cargoType
-}
-
-func (v *Vehicle) CustomerID() uuid.UUID {
-	return v.customerID
 }
 
 func (v *Vehicle) CreatedAt() *time.Time {
@@ -132,4 +123,3 @@ func (v *Vehicle) IsDisabled() bool {
 func (v *Vehicle) touch() {
 	v.modifiedAt = &time.Time{}
 }
-

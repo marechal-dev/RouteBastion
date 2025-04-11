@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/database"
+	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/platform/database"
 )
 
 type HealthController interface {
@@ -12,10 +12,10 @@ type HealthController interface {
 }
 
 type healthController struct {
-	db database.DatabaseService
+	db database.DBProvider
 }
 
-func NewHealthController(db database.DatabaseService) HealthController {
+func NewHealthController(db database.DBProvider) HealthController {
 	return &healthController{
 		db: db,
 	}

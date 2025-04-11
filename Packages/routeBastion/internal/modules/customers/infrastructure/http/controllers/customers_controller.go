@@ -1,10 +1,12 @@
 package controllers
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	dbImpl "github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/infrastructure/database"
 	usecases "github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/customers/application/use_cases"
 	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/customers/dtos"
 	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/customers/infrastructure/cryptography"
@@ -36,11 +38,20 @@ func (cc *CustomersController) Create(c *gin.Context) {
 		return
 	}
 
-	repository := persistence.NewPostgreSQLCustomersRepository(cc.db)
+	repository := persistence.NewPGCustomersRepository(cc.db)
 	apiKeyGen := cryptography.NewUuidApiKeyGenerator()
-	useCase := usecases.NewCreateCustomerUseCase(repository, apiKeyGen)
+	txManager := dbImpl.NewPgTxManager(cc.db.GetConn())
+	useCase := usecases.NewCreateCustomerUseCase(txManager, repository, apiKeyGen)
 
-	customer := useCase.Execute(dto)
+	ctx := context.Background()
+	customer, err := useCase.Execute(ctx, dto)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err,
+		})
+
+		return
+	}
 
 	payload := presenters.FromDomain(customer)
 
@@ -50,7 +61,7 @@ func (cc *CustomersController) Create(c *gin.Context) {
 func (cc *CustomersController) GetOneByApiKey(c *gin.Context) {
 	apiKey := c.Param("apiKey")
 
-	repository := persistence.NewPostgreSQLCustomersRepository(cc.db)
+	repository := persistence.NewPGCustomersRepository(cc.db)
 	useCase := usecases.NewGetOneCustomerUseCaseImpl(repository)
 
 	foundCustomer := useCase.Execute(apiKey)
