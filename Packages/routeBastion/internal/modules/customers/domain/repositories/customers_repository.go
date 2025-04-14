@@ -9,6 +9,7 @@ import (
 
 type CustomersRepository interface {
 	Create(ctx context.Context, customer *entities.Customer) error
-	GetOneByApiKey(apiKey string) *entities.Customer
 	SaveApiKey(ctx context.Context, input *dtos.SaveApiKeyDTO) error
+	GetOneByApiKey(apiKey string) *entities.Customer
+	GetOneByBusinessIdentifier(businessIdentifier string) (*entities.Customer, error)
 }

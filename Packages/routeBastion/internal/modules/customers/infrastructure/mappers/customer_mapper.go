@@ -1,30 +1,31 @@
 package mappers
 
 import (
-	"time"
-
 	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/infrastructure/database/generated"
 	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/customers/domain/entities"
 )
 
-func ToDomain(model *generated.GetCustomerByApiKeyRow) *entities.Customer {
-	var modifiedAt *time.Time = nil
-	var deletedAt *time.Time = nil
+func ToDomain(
+	rawCustomer generated.ModelCustomer,
+	rawApiKey generated.ModelApiKey,
+	rawVehicles []generated.ModelVehicle,
+) *entities.Customer {
+	apiKey := entities.RehydrateApiKey(
+		rawApiKey.ID,
+		rawApiKey.Key,
+		&rawApiKey.CreatedAt.Time,
+		&rawApiKey.ModifiedAt.Time,
+		&rawApiKey.DeletedAt.Time,
+	)
 
-	if model.ModelCustomer.ModifiedAt.Valid {
-		modifiedAt = &model.ModelCustomer.ModifiedAt.Time
-	}
-
-	if model.ModelCustomer.DeletedAt.Valid {
-		deletedAt = &model.ModelCustomer.DeletedAt.Time
-	}
-
-	return entities.NewCustomerFull(
-		model.ModelCustomer.ID,
-		model.ModelCustomer.Name,
-		model.ModelCustomer.BusinessIdentifier,
-		&model.ModelCustomer.CreatedAt.Time,
-		modifiedAt,
-		deletedAt,
+	return entities.RehydrateCustomer(
+		rawCustomer.ID,
+		rawCustomer.Name,
+		rawCustomer.BusinessIdentifier,
+		apiKey,
+		[]*entities.Vehicle{},
+		&rawApiKey.CreatedAt.Time,
+		&rawApiKey.ModifiedAt.Time,
+		&rawApiKey.DeletedAt.Time,
 	)
 }

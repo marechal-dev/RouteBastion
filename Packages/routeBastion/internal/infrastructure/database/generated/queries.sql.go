@@ -96,7 +96,7 @@ type CreateVehicleParams struct {
 	CreatedAt  pgtype.Timestamp
 }
 
-func (q *Queries) CreateVehicle(ctx context.Context, arg CreateVehicleParams) (Vehicle, error) {
+func (q *Queries) CreateVehicle(ctx context.Context, arg CreateVehicleParams) (ModelVehicle, error) {
 	row := q.db.QueryRow(ctx, createVehicle,
 		arg.ID,
 		arg.Plate,
@@ -105,7 +105,7 @@ func (q *Queries) CreateVehicle(ctx context.Context, arg CreateVehicleParams) (V
 		arg.CustomerID,
 		arg.CreatedAt,
 	)
-	var i Vehicle
+	var i ModelVehicle
 	err := row.Scan(
 		&i.ID,
 		&i.Plate,
@@ -201,7 +201,7 @@ ORDER BY optimizations.created_at DESC
 type GetActiveOptimizationsByCustomerIDRow struct {
 	ModelOptimization         ModelOptimization
 	ModelOptimizationWaypoint ModelOptimizationWaypoint
-	OptimizationVehicle       OptimizationVehicle
+	ModelOptimizationVehicle  ModelOptimizationVehicle
 }
 
 func (q *Queries) GetActiveOptimizationsByCustomerID(ctx context.Context, customerID go_uuid.UUID) ([]GetActiveOptimizationsByCustomerIDRow, error) {
@@ -210,7 +210,7 @@ func (q *Queries) GetActiveOptimizationsByCustomerID(ctx context.Context, custom
 		return nil, err
 	}
 	defer rows.Close()
-	var items []GetActiveOptimizationsByCustomerIDRow
+	items := []GetActiveOptimizationsByCustomerIDRow{}
 	for rows.Next() {
 		var i GetActiveOptimizationsByCustomerIDRow
 		if err := rows.Scan(
@@ -228,8 +228,8 @@ func (q *Queries) GetActiveOptimizationsByCustomerID(ctx context.Context, custom
 			&i.ModelOptimizationWaypoint.OptimizationID,
 			&i.ModelOptimizationWaypoint.Latitude,
 			&i.ModelOptimizationWaypoint.Longitude,
-			&i.OptimizationVehicle.OptimizationID,
-			&i.OptimizationVehicle.VehicleID,
+			&i.ModelOptimizationVehicle.OptimizationID,
+			&i.ModelOptimizationVehicle.VehicleID,
 		); err != nil {
 			return nil, err
 		}
@@ -293,7 +293,7 @@ func (q *Queries) GetAvailableProviders(ctx context.Context) ([]GetAvailableProv
 		return nil, err
 	}
 	defer rows.Close()
-	var items []GetAvailableProvidersRow
+	items := []GetAvailableProvidersRow{}
 	for rows.Next() {
 		var i GetAvailableProvidersRow
 		if err := rows.Scan(
@@ -343,7 +343,7 @@ func (q *Queries) GetConstraintsByCustomerID(ctx context.Context, customerID go_
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Constraint
+	items := []Constraint{}
 	for rows.Next() {
 		var i Constraint
 		if err := rows.Scan(
@@ -415,15 +415,15 @@ FROM vehicles AS v
 WHERE (v.customer_id, v.deleted_at) = ($1, NULL)
 `
 
-func (q *Queries) GetManyVehiclesByCustomerID(ctx context.Context, customerID go_uuid.UUID) ([]Vehicle, error) {
+func (q *Queries) GetManyVehiclesByCustomerID(ctx context.Context, customerID go_uuid.UUID) ([]ModelVehicle, error) {
 	rows, err := q.db.Query(ctx, getManyVehiclesByCustomerID, customerID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Vehicle
+	items := []ModelVehicle{}
 	for rows.Next() {
-		var i Vehicle
+		var i ModelVehicle
 		if err := rows.Scan(
 			&i.ID,
 			&i.Plate,
@@ -444,6 +444,42 @@ func (q *Queries) GetManyVehiclesByCustomerID(ctx context.Context, customerID go
 	return items, nil
 }
 
+const getOneCustomerByBusinessIdentifier = `-- name: GetOneCustomerByBusinessIdentifier :one
+SELECT
+  c.id, c.name, c.business_identifier, c.created_at, c.modified_at, c.deleted_at,
+  ak.id, ak.key, ak.customer_id, ak.created_at, ak.modified_at, ak.deleted_at
+FROM customers AS c
+JOIN api_keys AS ak
+  ON c.id = ak.customer_id
+WHERE c.business_identifier = $1
+LIMIT 1
+`
+
+type GetOneCustomerByBusinessIdentifierRow struct {
+	ModelCustomer ModelCustomer
+	ModelApiKey   ModelApiKey
+}
+
+func (q *Queries) GetOneCustomerByBusinessIdentifier(ctx context.Context, businessIdentifier string) (GetOneCustomerByBusinessIdentifierRow, error) {
+	row := q.db.QueryRow(ctx, getOneCustomerByBusinessIdentifier, businessIdentifier)
+	var i GetOneCustomerByBusinessIdentifierRow
+	err := row.Scan(
+		&i.ModelCustomer.ID,
+		&i.ModelCustomer.Name,
+		&i.ModelCustomer.BusinessIdentifier,
+		&i.ModelCustomer.CreatedAt,
+		&i.ModelCustomer.ModifiedAt,
+		&i.ModelCustomer.DeletedAt,
+		&i.ModelApiKey.ID,
+		&i.ModelApiKey.Key,
+		&i.ModelApiKey.CustomerID,
+		&i.ModelApiKey.CreatedAt,
+		&i.ModelApiKey.ModifiedAt,
+		&i.ModelApiKey.DeletedAt,
+	)
+	return i, err
+}
+
 const getOptimizationHistoryByCustomerID = `-- name: GetOptimizationHistoryByCustomerID :many
 SELECT
   optimizations.id, optimizations.customer_id, optimizations.selected_cloud_id, optimizations.status, optimizations.kind, optimizations.cost, optimizations.started_at, optimizations.ended_at, optimizations.created_at, optimizations.modified_at,
@@ -459,7 +495,7 @@ ORDER BY optimizations.created_at DESC
 type GetOptimizationHistoryByCustomerIDRow struct {
 	ModelOptimization         ModelOptimization
 	ModelOptimizationWaypoint ModelOptimizationWaypoint
-	OptimizationVehicle       OptimizationVehicle
+	ModelOptimizationVehicle  ModelOptimizationVehicle
 }
 
 func (q *Queries) GetOptimizationHistoryByCustomerID(ctx context.Context, customerID go_uuid.UUID) ([]GetOptimizationHistoryByCustomerIDRow, error) {
@@ -468,7 +504,7 @@ func (q *Queries) GetOptimizationHistoryByCustomerID(ctx context.Context, custom
 		return nil, err
 	}
 	defer rows.Close()
-	var items []GetOptimizationHistoryByCustomerIDRow
+	items := []GetOptimizationHistoryByCustomerIDRow{}
 	for rows.Next() {
 		var i GetOptimizationHistoryByCustomerIDRow
 		if err := rows.Scan(
@@ -486,8 +522,8 @@ func (q *Queries) GetOptimizationHistoryByCustomerID(ctx context.Context, custom
 			&i.ModelOptimizationWaypoint.OptimizationID,
 			&i.ModelOptimizationWaypoint.Latitude,
 			&i.ModelOptimizationWaypoint.Longitude,
-			&i.OptimizationVehicle.OptimizationID,
-			&i.OptimizationVehicle.VehicleID,
+			&i.ModelOptimizationVehicle.OptimizationID,
+			&i.ModelOptimizationVehicle.VehicleID,
 		); err != nil {
 			return nil, err
 		}

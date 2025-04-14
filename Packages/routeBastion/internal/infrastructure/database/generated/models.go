@@ -276,6 +276,11 @@ type ModelOptimization struct {
 	ModifiedAt      pgtype.Timestamp
 }
 
+type ModelOptimizationVehicle struct {
+	OptimizationID go_uuid.UUID
+	VehicleID      go_uuid.UUID
+}
+
 type ModelOptimizationWaypoint struct {
 	ID             go_uuid.UUID
 	OptimizationID go_uuid.UUID
@@ -308,12 +313,7 @@ type ModelProviderConstraintsAndFeatures struct {
 	SupportsAsyncBatchRequests bool
 }
 
-type OptimizationVehicle struct {
-	OptimizationID go_uuid.UUID
-	VehicleID      go_uuid.UUID
-}
-
-type Vehicle struct {
+type ModelVehicle struct {
 	ID         go_uuid.UUID
 	Plate      string
 	Capacity   float64

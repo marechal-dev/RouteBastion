@@ -5,16 +5,23 @@ INSERT INTO customers (
   $1, $2, $3
 ) RETURNING *;
 
--- name: GetCustomerByApiKey :one
+-- name: GetOneCustomerByBusinessIdentifier :one
 SELECT
   sqlc.embed(c),
-  sqlc.embed(ak),
-  sqlc.embed(v)
+  sqlc.embed(ak)
 FROM customers AS c
 JOIN api_keys AS ak
   ON c.id = ak.customer_id
-JOIN vehicles AS v
-  ON c.id = v.customer_id
+WHERE c.business_identifier = $1
+LIMIT 1;
+
+-- name: GetCustomerByApiKey :one
+SELECT
+  sqlc.embed(c),
+  sqlc.embed(ak)
+FROM customers AS c
+JOIN api_keys AS ak
+  ON c.id = ak.customer_id
 WHERE ak.key = $1
 LIMIT 1;
 

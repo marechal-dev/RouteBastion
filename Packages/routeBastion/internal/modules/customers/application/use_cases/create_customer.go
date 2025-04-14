@@ -2,12 +2,12 @@ package usecases
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/customers/application/cryptography"
 	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/customers/domain/entities"
 	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/customers/domain/repositories"
 	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/customers/dtos"
+	sharedErrors "github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/shared/errors"
 	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/platform/database"
 )
 
@@ -37,6 +37,14 @@ func (uc *CreateCustomerUseCaseImpl) Execute(
 	ctx context.Context,
 	dto *dtos.CreateCustomerDTO,
 ) (*entities.Customer, error) {
+	customer, _ := uc.repo.GetOneByBusinessIdentifier(dto.BusinessIdentifier)
+	if customer != nil {
+		return nil, sharedErrors.ApplicationError{
+			Code: sharedErrors.ErrCodeConflict,
+			Msg:  "customer already exists",
+		}
+	}
+
 	return database.WithinTransactionReturning(
 		uc.tx,
 		ctx,
@@ -51,20 +59,22 @@ func (uc *CreateCustomerUseCaseImpl) Execute(
 
 			err := uc.repo.Create(txCtx, customer)
 			if err != nil {
-				return nil, err
+				return nil, sharedErrors.InfrastructureError{
+					Code: sharedErrors.ErrCodeDatabaseFailure,
+					Msg:  err.Error(),
+				}
 			}
-
-			fmt.Printf("customer: %v", err)
 
 			err = uc.repo.SaveApiKey(txCtx, &dtos.SaveApiKeyDTO{
 				ApiKey:     apiKey,
 				CustomerID: customer.ID(),
 			})
 			if err != nil {
-				return nil, err
+				return nil, sharedErrors.InfrastructureError{
+					Code: sharedErrors.ErrCodeDatabaseFailure,
+					Msg:  err.Error(),
+				}
 			}
-
-			fmt.Printf("api key: %v", err)
 
 			return customer, nil
 		},

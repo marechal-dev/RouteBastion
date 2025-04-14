@@ -12,6 +12,7 @@ import (
 	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/customers/infrastructure/cryptography"
 	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/customers/infrastructure/persistence"
 	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/customers/infrastructure/presenters"
+	sharedErrors "github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/shared/errors"
 	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/platform/database"
 )
 
@@ -46,9 +47,24 @@ func (cc *CustomersController) Create(c *gin.Context) {
 	ctx := context.Background()
 	customer, err := useCase.Execute(ctx, dto)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": err,
-		})
+		switch e := err.(type) {
+		case sharedErrors.DomainError:
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": e.Error(),
+			})
+		case sharedErrors.ApplicationError:
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": e.Error(),
+			})
+		case sharedErrors.InfrastructureError:
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": e.Error(),
+			})
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": e.Error(),
+			})
+		}
 
 		return
 	}

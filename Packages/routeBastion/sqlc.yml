@@ -7,6 +7,8 @@ overrides:
       limitation: "ModelLimitation"
       provider: "ModelProvider"
       api_key: "ModelApiKey"
+      vehicle: "ModelVehicle"
+      optimization_vehicle: "ModelOptimizationVehicle"
       provider_communication: "ModelProviderCommunication"
       provider_constraints_and_feature: "ModelProviderConstraintsAndFeatures"
       optimization: "ModelOptimization"
@@ -16,10 +18,6 @@ overrides:
         go_type:
           import: "github.com/satori/go.uuid"
           type: "UUID"
-      - db_type: "timestamp"
-        go_type:
-          import: "time"
-          type: "Time"
 
 sql:
   - engine: "postgresql"
@@ -30,6 +28,7 @@ sql:
     gen:
       go:
         sql_package: "pgx/v5"
+        emit_empty_slices: true
         emit_pointers_for_null_types: true
         package: "generated"
         out: "internal/infrastructure/database/generated"
