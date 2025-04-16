@@ -158,6 +158,7 @@ services:
       - "9121:9121"
     command: ["--redis.addr=redis://cache:6379"]
     depends_on:
-      - cache
+      cache:
+        condition: service_healthy
     networks:
       - metrics

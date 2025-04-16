@@ -2,7 +2,9 @@ package usecases
 
 import (
 	"context"
+	"errors"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/customers/application/cryptography"
 	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/customers/domain/entities"
 	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/customers/domain/repositories"
@@ -37,7 +39,15 @@ func (uc *CreateCustomerUseCaseImpl) Execute(
 	ctx context.Context,
 	dto *dtos.CreateCustomerDTO,
 ) (*entities.Customer, error) {
-	customer, _ := uc.repo.GetOneByBusinessIdentifier(dto.BusinessIdentifier)
+	customer, err := uc.repo.GetOneByBusinessIdentifier(dto.BusinessIdentifier)
+
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+		return nil, sharedErrors.InfrastructureError{
+			Code: sharedErrors.ErrCodeDatabaseFailure,
+			Msg:  err.Error(),
+		}
+	}
+
 	if customer != nil {
 		return nil, sharedErrors.ApplicationError{
 			Code: sharedErrors.ErrCodeConflict,

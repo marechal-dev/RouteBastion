@@ -35,12 +35,14 @@ func NewVehicle(
 	capacity float64,
 	cargoType CargoKind,
 ) *Vehicle {
+	now := time.Now()
+
 	return &Vehicle{
 		id:         uuid.NewV4(),
 		plate:      plate,
 		capacity:   capacity,
 		cargoType:  cargoType,
-		createdAt:  &time.Time{},
+		createdAt:  &now,
 		modifiedAt: nil,
 		deletedAt:  nil,
 	}
@@ -105,7 +107,8 @@ func (v *Vehicle) DeletedAt() *time.Time {
 }
 
 func (v *Vehicle) Disable() {
-	v.deletedAt = &time.Time{}
+	now := time.Now()
+	v.deletedAt = &now
 	v.touch()
 }
 
@@ -114,12 +117,13 @@ func (v *Vehicle) IsDisabled() bool {
 		return false
 	}
 
-	now := &time.Time{}
+	now := time.Now()
 	nowUNIX := now.Unix()
 
 	return v.deletedAt.Unix() > nowUNIX
 }
 
 func (v *Vehicle) touch() {
-	v.modifiedAt = &time.Time{}
+	now := time.Now()
+	v.modifiedAt = &now
 }

@@ -27,6 +27,8 @@ func NewCustomer(
 	businessIdentifier string,
 	apiKey *ApiKey,
 ) *Customer {
+	now := time.Now()
+
 	return &Customer{
 		id:                 uuid.NewV4(),
 		name:               name,
@@ -35,7 +37,7 @@ func NewCustomer(
 		apiKey:   apiKey,
 		vehicles: []*Vehicle{},
 
-		createdAt:  &time.Time{},
+		createdAt:  &now,
 		modifiedAt: nil,
 		deletedAt:  nil,
 	}
@@ -108,6 +110,10 @@ func (c *Customer) RemoveVehicle(vehicleID string) error {
 	return errors.New("vehicle not found")
 }
 
+func (c *Customer) ApiKey() *ApiKey {
+	return c.apiKey
+}
+
 func (c *Customer) SetApiKey(key *ApiKey) error {
 	if key == nil {
 		return errors.New("api key cannot be nil")
@@ -132,7 +138,8 @@ func (c *Customer) DeletedAt() *time.Time {
 }
 
 func (c *Customer) Disable() {
-	c.deletedAt = &time.Time{}
+	now := time.Now()
+	c.deletedAt = &now
 	c.touch()
 }
 
@@ -141,12 +148,12 @@ func (c *Customer) IsDisabled() bool {
 		return false
 	}
 
-	now := &time.Time{}
-	nowUNIX := now.Unix()
+	nowUNIX := time.Now().Unix()
 
 	return c.deletedAt.Unix() > nowUNIX
 }
 
 func (c *Customer) touch() {
-	c.modifiedAt = &time.Time{}
+	now := time.Now()
+	c.modifiedAt = &now
 }

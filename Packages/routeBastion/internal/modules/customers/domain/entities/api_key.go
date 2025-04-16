@@ -17,10 +17,11 @@ type ApiKey struct {
 func NewApiKey(
 	key string,
 ) *ApiKey {
+	now := time.Now()
 	return &ApiKey{
 		id:         uuid.NewV4(),
 		key:        key,
-		createdAt:  &time.Time{},
+		createdAt:  &now,
 		modifiedAt: nil,
 		deletedAt:  nil,
 	}
@@ -68,10 +69,12 @@ func (ak *ApiKey) DeletedAt() *time.Time {
 }
 
 func (ak *ApiKey) Revoke() {
-	ak.deletedAt = &time.Time{}
+	now := time.Now()
+	ak.deletedAt = &now
 	ak.touch()
 }
 
 func (ak *ApiKey) touch() {
-	ak.modifiedAt = &time.Time{}
+	now := time.Now()
+	ak.modifiedAt = &now
 }

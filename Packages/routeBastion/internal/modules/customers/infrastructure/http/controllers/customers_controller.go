@@ -57,7 +57,7 @@ func (cc *CustomersController) Create(c *gin.Context) {
 				"error": e.Error(),
 			})
 		case sharedErrors.InfrastructureError:
-			c.JSON(http.StatusBadRequest, gin.H{
+			c.JSON(http.StatusInternalServerError, gin.H{
 				"error": e.Error(),
 			})
 		default:

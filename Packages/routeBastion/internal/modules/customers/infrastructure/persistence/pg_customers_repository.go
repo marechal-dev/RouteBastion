@@ -8,7 +8,6 @@ import (
 	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/customers/domain/entities"
 	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/customers/dtos"
 	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/customers/infrastructure/mappers"
-	sharedErrors "github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/shared/errors"
 	infraShared "github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/modules/shared/infrastructure"
 	"github.com/marechal-dev/RouteBastion/Packages/routeBastion/internal/platform/database"
 )
@@ -58,11 +57,9 @@ func (r *PGCustomersRepository) GetOneByBusinessIdentifier(
 		context.Background(),
 		businessIdentifier,
 	)
+
 	if err != nil {
-		return nil, sharedErrors.InfrastructureError{
-			Code: sharedErrors.ErrCodeDatabaseFailure,
-			Msg:  err.Error(),
-		}
+		return nil, err
 	}
 
 	return mappers.ToDomain(
