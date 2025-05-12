@@ -1,8 +1,0 @@
-{
-  "yaml.schemas": {
-    "https://json.schemastore.org/sqlc-2.0.json": [
-      "file:///home/marechal-dev/Dev/Source/Projects/Personal/Backend/Golang/RouteBastion/Packages/routeBastion/configs/sqlc.yml",
-      "file:///home/marechal-dev/Dev/Source/Projects/Personal/Backend/Golang/RouteBastion/Packages/routeBastion/sqlc.yml"
-    ]
-  }
-}
